@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'class_screen.dart';
 import 'assignment_screen.dart';
+import 'sub/class_otherscreen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -528,30 +529,6 @@ class MemoScreen extends StatelessWidget {
         title: const Text('メモ'),
       ),
       body: const Center(child: Text('メモ画面', style: TextStyle(fontSize: 20))),
-    );
-  }
-}
-
-// ==========================================
-// その他画面
-// ==========================================
-
-class OtherScreen extends StatelessWidget {
-  const OtherScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text('その他'),
-      ),
-      body: const Center(child: Text('その他画面', style: TextStyle(fontSize: 20))),
     );
   }
 }
