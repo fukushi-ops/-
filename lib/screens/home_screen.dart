@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'class_screen.dart';
+import 'assignment_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -58,7 +60,6 @@ class HomeScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // 日付
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -92,9 +93,6 @@ class HomeScreen extends StatelessWidget {
 
                     const Divider(color: Colors.black),
 
-                    const SizedBox(height: 4),
-
-                    // 今日の授業
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -108,10 +106,10 @@ class HomeScreen extends StatelessWidget {
 
                     const SizedBox(height: 12),
 
-                    // 1時間目
-                    Row(
+                    // 1限
+                    const Row(
                       children: [
-                        const SizedBox(
+                        SizedBox(
                           width: 35,
                           child: Text(
                             '1限',
@@ -122,7 +120,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(
+                        SizedBox(
                           width: 80,
                           child: Text(
                             '9:00~10:30',
@@ -130,7 +128,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -153,7 +151,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const Text(
+                        Text(
                           '田中先生',
                           style: TextStyle(color: Colors.teal, fontSize: 12),
                         ),
@@ -162,10 +160,10 @@ class HomeScreen extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // 2時間目
-                    Row(
+                    // 2限
+                    const Row(
                       children: [
-                        const SizedBox(
+                        SizedBox(
                           width: 35,
                           child: Text(
                             '2限',
@@ -176,7 +174,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(
+                        SizedBox(
                           width: 80,
                           child: Text(
                             '10:50~12:20',
@@ -184,7 +182,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -207,7 +205,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const Text(
+                        Text(
                           '佐藤先生',
                           style: TextStyle(color: Colors.teal, fontSize: 12),
                         ),
@@ -268,26 +266,13 @@ class HomeScreen extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    Row(
+                    const Row(
                       children: [
-                        // 課題アイコン
-                        Container(
-                          width: 45,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: const Icon(
-                            Icons.description,
-                            size: 35,
-                            color: Colors.amber,
-                          ),
-                        ),
+                        Icon(Icons.description, size: 45, color: Colors.amber),
 
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
 
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -333,9 +318,9 @@ class HomeScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text(
                           '今週の課題',
                           style: TextStyle(
@@ -362,11 +347,11 @@ class HomeScreen extends StatelessWidget {
                         Expanded(
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
-                            child: LinearProgressIndicator(
+                            child: const LinearProgressIndicator(
                               value: 0.6,
                               minHeight: 18,
                               backgroundColor: Colors.white,
-                              valueColor: const AlwaysStoppedAnimation(
+                              valueColor: AlwaysStoppedAnimation(
                                 Colors.deepPurple,
                               ),
                             ),
@@ -427,18 +412,17 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
 
-                    // 円形の出席率
                     SizedBox(
                       width: 65,
                       height: 65,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          CircularProgressIndicator(
+                          const CircularProgressIndicator(
                             value: 0.85,
                             strokeWidth: 5,
                             backgroundColor: Colors.white,
-                            valueColor: const AlwaysStoppedAnimation(
+                            valueColor: AlwaysStoppedAnimation(
                               Colors.deepPurple,
                             ),
                           ),
@@ -474,7 +458,37 @@ class HomeScreen extends StatelessWidget {
         unselectedItemColor: Colors.black,
 
         onTap: (index) {
-          // 後で各画面につなげる
+          // 時間割
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ClassScreen()),
+            );
+          }
+
+          // 課題
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AssignmentScreen()),
+            );
+          }
+
+          // メモ
+          if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MemoScreen()),
+            );
+          }
+
+          // その他
+          if (index == 4) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const OtherScreen()),
+            );
+          }
         },
 
         items: const [
@@ -492,6 +506,54 @@ class HomeScreen extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'その他'),
         ],
       ),
+    );
+  }
+}
+
+// ==========================================
+// メモ画面
+// ==========================================
+
+class MemoScreen extends StatelessWidget {
+  const MemoScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: const Text('メモ'),
+      ),
+      body: const Center(child: Text('メモ画面', style: TextStyle(fontSize: 20))),
+    );
+  }
+}
+
+// ==========================================
+// その他画面
+// ==========================================
+
+class OtherScreen extends StatelessWidget {
+  const OtherScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: const Text('その他'),
+      ),
+      body: const Center(child: Text('その他画面', style: TextStyle(fontSize: 20))),
     );
   }
 }
