@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'class_screen.dart';
-import 'assignment_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -8,34 +6,491 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('授業・提出物管理')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: Colors.white,
+
+      // =========================
+      // 上の部分
+      // =========================
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+
+        title: const Row(
           children: [
-            ElevatedButton(
-              child: const Text('授業一覧'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ClassScreen()),
-                );
-              },
+            Text(
+              'おはよう、結菜さん',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-
-            const SizedBox(height: 20),
-
-            ElevatedButton(
-              child: const Text('提出物一覧'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AssignmentScreen()),
-                );
-              },
-            ),
+            SizedBox(width: 5),
+            Text('☀️', style: TextStyle(fontSize: 18)),
           ],
         ),
+
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_none, color: Colors.black),
+          ),
+        ],
+      ),
+
+      // =========================
+      // ホーム画面
+      // =========================
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // =========================
+              // 今日の授業
+              // =========================
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F3F4),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    // 日付
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          '5月20日（月）',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDDEEFF),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Text(
+                            '今週の予定 ＞',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Divider(color: Colors.black),
+
+                    const SizedBox(height: 4),
+
+                    // 今日の授業
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '今日の授業',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // 1時間目
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 35,
+                          child: Text(
+                            '1限',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          width: 80,
+                          child: Text(
+                            '9:00~10:30',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '情報管理',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                '教室:A101',
+                                style: TextStyle(
+                                  color: Colors.teal,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const Text(
+                          '田中先生',
+                          style: TextStyle(color: Colors.teal, fontSize: 12),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 2時間目
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 35,
+                          child: Text(
+                            '2限',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          width: 80,
+                          child: Text(
+                            '10:50~12:20',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'デザイン基礎',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                '教室:A202',
+                                style: TextStyle(
+                                  color: Colors.teal,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const Text(
+                          '佐藤先生',
+                          style: TextStyle(color: Colors.teal, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // =========================
+              // 今日の締切
+              // =========================
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F3F4),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          '今日の締切',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Text(
+                            '残り5時間',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Divider(color: Colors.black),
+
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        // 課題アイコン
+                        Container(
+                          width: 45,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: const Icon(
+                            Icons.description,
+                            size: 35,
+                            color: Colors.amber,
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'デザイン基礎　レポート提出',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              SizedBox(height: 8),
+
+                              Text(
+                                '5月20日（月）23:59まで',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // =========================
+              // 今週の課題
+              // =========================
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F3F4),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.blue, width: 2),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        Text(
+                          '今週の課題',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        Text(
+                          '3 / 5件',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: LinearProgressIndicator(
+                              value: 0.6,
+                              minHeight: 18,
+                              backgroundColor: Colors.white,
+                              valueColor: const AlwaysStoppedAnimation(
+                                Colors.deepPurple,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        const Text(
+                          '60%',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // =========================
+              // 出席率
+              // =========================
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F3F4),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '出席率',
+                          style: TextStyle(
+                            color: Colors.deepPurple,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        SizedBox(height: 18),
+
+                        Text(
+                          '全体の出席率',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // 円形の出席率
+                    SizedBox(
+                      width: 65,
+                      height: 65,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            value: 0.85,
+                            strokeWidth: 5,
+                            backgroundColor: Colors.white,
+                            valueColor: const AlwaysStoppedAnimation(
+                              Colors.deepPurple,
+                            ),
+                          ),
+
+                          const Text(
+                            '85%',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+
+      // =========================
+      // 下のメニュー
+      // =========================
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        type: BottomNavigationBarType.fixed,
+
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.black,
+
+        onTap: (index) {
+          // 後で各画面につなげる
+        },
+
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
+
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month),
+            label: '時間割',
+          ),
+
+          BottomNavigationBarItem(icon: Icon(Icons.description), label: '課題'),
+
+          BottomNavigationBarItem(icon: Icon(Icons.sticky_note_2), label: 'メモ'),
+
+          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'その他'),
+        ],
       ),
     );
   }
