@@ -27,8 +27,6 @@ class HomeScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(width: 5),
-            Text('☀️', style: TextStyle(fontSize: 18)),
           ],
         ),
 
