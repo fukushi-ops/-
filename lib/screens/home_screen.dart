@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'class_screen.dart';
 import 'assignment_screen.dart';
 import 'sub/class_otherscreen.dart';
+import 'karender/calender_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -70,26 +71,35 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
 
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDDEEFF),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: const Text(
-                            '今週の予定 ＞',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CalendarScreen(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDDEEFF),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: const Text(
+                              '今週の予定 ＞',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
-
                     const Divider(color: Colors.black),
 
                     const Align(
