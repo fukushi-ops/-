@@ -8,7 +8,10 @@ class AddClassScreen extends StatefulWidget {
 }
 
 class _AddClassScreenState extends State<AddClassScreen> {
-  final TextEditingController controller = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController teacherController = TextEditingController();
+  final TextEditingController roomController = TextEditingController();
+  final TextEditingController timeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -19,15 +22,32 @@ class _AddClassScreenState extends State<AddClassScreen> {
         child: Column(
           children: [
             TextField(
-              controller: controller,
+              controller: nameController,
               decoration: const InputDecoration(labelText: '授業名'),
+            ),
+            TextField(
+              controller: teacherController,
+              decoration: const InputDecoration(labelText: '先生'),
+            ),
+            TextField(
+              controller: roomController,
+              decoration: const InputDecoration(labelText: '教室'),
+            ),
+            TextField(
+              controller: timeController,
+              decoration: const InputDecoration(labelText: '時間（例：9:00〜10:30）'),
             ),
 
             const SizedBox(height: 20),
 
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context, controller.text);
+                Navigator.pop(context, {
+                  "name": nameController.text,
+                  "teacher": teacherController.text,
+                  "room": roomController.text,
+                  "time": timeController.text,
+                });
               },
               child: const Text('保存'),
             ),

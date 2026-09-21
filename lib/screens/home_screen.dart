@@ -3,27 +3,41 @@ import 'class_screen.dart';
 import 'assignment_screen.dart';
 import 'sub/class_otherscreen.dart';
 import 'karender/calender_screen.dart';
+import 'lesson_data.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  final String userName;
+
+  const HomeScreen({super.key, required this.userName});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-      // =========================
-      // 上の部分
-      // =========================
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final formattedDate = "${now.month}月${now.day}日（${_weekday(now.weekday)}）";
+    final today = _weekday(now.weekday);
+
+    print("today = $today");
+
+    // ★ 今日の授業リストを取得
+    final lessons = LessonData.lessonsByDay[today]!;
+
+    // ★ 時間順に並べる（startTime を使う）
+    lessons.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+    return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-
-        title: const Row(
+        title: Row(
           children: [
             Text(
-              'おはよう、結菜さん',
-              style: TextStyle(
+              'おはよう、${widget.userName}',
+              style: const TextStyle(
                 color: Colors.black,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -31,7 +45,6 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-
         actions: [
           IconButton(
             onPressed: () {},
@@ -40,9 +53,6 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
 
-      // =========================
-      // ホーム画面
-      // =========================
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -63,14 +73,13 @@ class HomeScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          '5月20日（月）',
-                          style: TextStyle(
+                        Text(
+                          formattedDate,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -100,6 +109,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+
                     const Divider(color: Colors.black),
 
                     const Align(
@@ -115,110 +125,63 @@ class HomeScreen extends StatelessWidget {
 
                     const SizedBox(height: 12),
 
-                    // 1限
-                    const Row(
-                      children: [
-                        SizedBox(
-                          width: 35,
-                          child: Text(
-                            '1限',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(
-                          width: 80,
-                          child: Text(
-                            '9:00~10:30',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    Column(
+                      children: lessons.map((lesson) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Row(
                             children: [
-                              Text(
-                                '情報管理',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
+                              const SizedBox(
+                                width: 35,
+                                child: Text(
+                                  '授業',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                '教室:A101',
-                                style: TextStyle(
-                                  color: Colors.teal,
-                                  fontSize: 12,
+
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      lesson.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '教室: ${lesson.room}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                    Text(
+                                      '先生: ${lesson.teacher}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                    Text(
+                                      '時間: ${lesson.time}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                        ),
-
-                        Text(
-                          '田中先生',
-                          style: TextStyle(color: Colors.teal, fontSize: 12),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // 2限
-                    const Row(
-                      children: [
-                        SizedBox(
-                          width: 35,
-                          child: Text(
-                            '2限',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(
-                          width: 80,
-                          child: Text(
-                            '10:50~12:20',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'デザイン基礎',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                '教室:A202',
-                                style: TextStyle(
-                                  color: Colors.teal,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Text(
-                          '佐藤先生',
-                          style: TextStyle(color: Colors.teal, fontSize: 12),
-                        ),
-                      ],
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),
@@ -227,7 +190,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // =========================
-              // 今日の締切
+              // 今日の締切（元のまま）
               // =========================
               Container(
                 width: double.infinity,
@@ -249,7 +212,6 @@ class HomeScreen extends StatelessWidget {
                             fontSize: 14,
                           ),
                         ),
-
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -278,9 +240,7 @@ class HomeScreen extends StatelessWidget {
                     const Row(
                       children: [
                         Icon(Icons.description, size: 45, color: Colors.amber),
-
                         SizedBox(width: 12),
-
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,9 +252,7 @@ class HomeScreen extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-
                               SizedBox(height: 8),
-
                               Text(
                                 '5月20日（月）23:59まで',
                                 style: TextStyle(
@@ -315,7 +273,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // =========================
-              // 今週の課題
+              // 今週の課題（元のまま）
               // =========================
               Container(
                 width: double.infinity,
@@ -338,7 +296,6 @@ class HomeScreen extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-
                         Text(
                           '3 / 5件',
                           style: TextStyle(
@@ -366,9 +323,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-
                         const SizedBox(width: 12),
-
                         const Text(
                           '60%',
                           style: TextStyle(
@@ -385,7 +340,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // =========================
-              // 出席率
+              // 出席率（元のまま）
               // =========================
               Container(
                 width: double.infinity,
@@ -408,9 +363,7 @@ class HomeScreen extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-
                         SizedBox(height: 18),
-
                         Text(
                           '全体の出席率',
                           style: TextStyle(
@@ -420,7 +373,6 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-
                     SizedBox(
                       width: 65,
                       height: 65,
@@ -435,7 +387,6 @@ class HomeScreen extends StatelessWidget {
                               Colors.deepPurple,
                             ),
                           ),
-
                           const Text(
                             '85%',
                             style: TextStyle(
@@ -456,72 +407,59 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
 
-      // =========================
-      // 下のメニュー
-      // =========================
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         type: BottomNavigationBarType.fixed,
-
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.black,
-
-        onTap: (index) {
-          // 時間割
+        onTap: (index) async {
           if (index == 1) {
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ClassScreen()),
             );
+            setState(() {});
           }
 
-          // 課題
           if (index == 2) {
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AssignmentScreen()),
             );
+            setState(() {});
           }
 
-          // メモ
           if (index == 3) {
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MemoScreen()),
             );
+            setState(() {});
           }
 
-          // その他
           if (index == 4) {
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const OtherScreen()),
             );
+            setState(() {});
           }
         },
 
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
-
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month),
             label: '時間割',
           ),
-
           BottomNavigationBarItem(icon: Icon(Icons.description), label: '課題'),
-
           BottomNavigationBarItem(icon: Icon(Icons.sticky_note_2), label: 'メモ'),
-
           BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'その他'),
         ],
       ),
     );
   }
 }
-
-// ==========================================
-// メモ画面
-// ==========================================
 
 class MemoScreen extends StatelessWidget {
   const MemoScreen({super.key});
@@ -541,4 +479,9 @@ class MemoScreen extends StatelessWidget {
       body: const Center(child: Text('メモ画面', style: TextStyle(fontSize: 20))),
     );
   }
+}
+
+String _weekday(int w) {
+  const weekdays = ["月", "火", "水", "木", "金", "土", "日"];
+  return weekdays[w - 1];
 }
