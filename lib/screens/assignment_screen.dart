@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'add_assignment_screen.dart';
+import 'task_data.dart'; // ★ TaskData / TaskStorage を使う
 
 class AssignmentScreen extends StatefulWidget {
   const AssignmentScreen({super.key});
@@ -9,48 +10,31 @@ class AssignmentScreen extends StatefulWidget {
 }
 
 class _AssignmentScreenState extends State<AssignmentScreen> {
-  // 現在選択されているタブ
-  int selectedIndex = 0;
+  int selectedIndex = 0; // 0:すべて 1:未提出 2:提出済み
 
   @override
   Widget build(BuildContext context) {
+    List<Task> filteredTasks = _getFilteredTasks();
+
     return Scaffold(
       appBar: AppBar(
-        // 左上：戻るボタン
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
-
-        // 中央：タイトル
         title: const Text(
           '課題一覧',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-
         centerTitle: true,
 
-        // 右上：＋ボタン
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, size: 30),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddAssignmentScreen()),
-              );
-            },
-          ),
-        ],
+        // ★ 右上の＋ボタンを削除（actions を消す）
       ),
 
       body: Column(
         children: [
           const SizedBox(height: 8),
 
-          // 「すべて・未提出・提出済み」
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -60,31 +44,85 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
             ],
           ),
 
-          // 課題一覧
-          const Expanded(
-            child: Center(
-              child: Text('課題はありません', style: TextStyle(fontSize: 16)),
-            ),
+          Expanded(
+            child: filteredTasks.isEmpty
+                ? const Center(
+                    child: Text('課題はありません', style: TextStyle(fontSize: 16)),
+                  )
+                : ListView.builder(
+                    itemCount: filteredTasks.length,
+                    itemBuilder: (context, index) {
+                      final task = filteredTasks[index];
+
+                      return Dismissible(
+                        key: ValueKey(task.title),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          color: Colors.red,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        onDismissed: (_) {
+                          setState(() {
+                            TaskData.tasks.remove(task);
+                          });
+                          TaskStorage.save(); // ★ 削除したら保存
+                        },
+                        child: ListTile(
+                          title: Text(task.title),
+                          subtitle: Text("${task.subject} / ${task.deadline}"),
+
+                          trailing: Checkbox(
+                            value: task.isDone,
+                            onChanged: (value) {
+                              setState(() {
+                                task.isDone = value!;
+                              });
+                              TaskStorage.save(); // ★ 完了状態変更も保存
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
 
-      // 右下：黒い＋ボタン
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AddAssignmentScreen()),
           );
+
+          if (result != null) {
+            setState(() {
+              TaskData.tasks.add(result);
+            });
+
+            TaskStorage.save(); // ★ 保存
+          }
         },
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  // タブボタンを作る
+  // ★ タブごとのフィルタ処理
+  List<Task> _getFilteredTasks() {
+    if (selectedIndex == 1) {
+      return TaskData.tasks.where((t) => !t.isDone).toList();
+    } else if (selectedIndex == 2) {
+      return TaskData.tasks.where((t) => t.isDone).toList();
+    }
+    return TaskData.tasks;
+  }
+
+  // タブボタン
   Widget _buildTabButton(String text, int index) {
     final bool isSelected = selectedIndex == index;
 

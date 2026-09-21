@@ -13,24 +13,6 @@ class ClassScreen extends StatefulWidget {
 class _ClassScreenState extends State<ClassScreen> {
   String selectedDay = "月";
 
-  int parseStartTime(String time) {
-    final separators = ["～", "〜", "~", "-", "ー"];
-    String start = time;
-
-    for (var s in separators) {
-      if (time.contains(s)) {
-        start = time.split(s)[0];
-        break;
-      }
-    }
-
-    final parts = start.split(":");
-    final hour = int.parse(parts[0]);
-    final minute = int.parse(parts[1]);
-
-    return hour * 100 + minute;
-  }
-
   @override
   Widget build(BuildContext context) {
     final todayClassList = LessonData.lessonsByDay[selectedDay]!;
@@ -74,6 +56,7 @@ class _ClassScreenState extends State<ClassScreen> {
                     setState(() {
                       LessonData.lessonsByDay[selectedDay]!.removeAt(index);
                     });
+                    LessonStorage.save();
                   },
 
                   child: ListTile(
@@ -82,32 +65,22 @@ class _ClassScreenState extends State<ClassScreen> {
                       "${lesson.room} / ${lesson.teacher} / ${lesson.time}",
                     ),
 
-                    // ★ タップで編集画面へ
+                    // ★ 編集画面へ
                     onTap: () async {
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => EditClassScreen(
-                            lessonData: {
-                              "name": lesson.name,
-                              "teacher": lesson.teacher,
-                              "room": lesson.room,
-                              "time": lesson.time,
-                            },
+                            lesson: lesson, // ★ Lesson を渡す
                           ),
                         ),
                       );
 
                       if (result != null) {
                         setState(() {
-                          todayClassList[index] = Lesson(
-                            name: result["name"],
-                            teacher: result["teacher"],
-                            room: result["room"],
-                            time: result["time"],
-                            startTime: parseStartTime(result["time"]),
-                          );
+                          todayClassList[index] = result; // ★ Lesson をそのまま置き換え
                         });
+                        LessonStorage.save();
                       }
                     },
                   ),
@@ -123,21 +96,16 @@ class _ClassScreenState extends State<ClassScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddClassScreen()),
+            MaterialPageRoute(builder: (_) => const AddClassScreen()),
           );
 
           if (result != null) {
             setState(() {
               LessonData.lessonsByDay[selectedDay]!.add(
-                Lesson(
-                  name: result["name"],
-                  teacher: result["teacher"],
-                  room: result["room"],
-                  time: result["time"],
-                  startTime: parseStartTime(result["time"]),
-                ),
-              );
+                result,
+              ); // ★ Lesson をそのまま追加
             });
+            LessonStorage.save();
           }
         },
       ),

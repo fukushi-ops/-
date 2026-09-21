@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'lesson_data.dart';
 
 class EditClassScreen extends StatefulWidget {
-  final Map<String, dynamic> lessonData;
+  final Lesson lesson;
 
-  const EditClassScreen({super.key, required this.lessonData});
+  const EditClassScreen({super.key, required this.lesson});
 
   @override
   State<EditClassScreen> createState() => _EditClassScreenState();
@@ -18,12 +19,29 @@ class _EditClassScreenState extends State<EditClassScreen> {
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: widget.lessonData["name"]);
-    teacherController = TextEditingController(
-      text: widget.lessonData["teacher"],
-    );
-    roomController = TextEditingController(text: widget.lessonData["room"]);
-    timeController = TextEditingController(text: widget.lessonData["time"]);
+
+    nameController = TextEditingController(text: widget.lesson.name);
+    teacherController = TextEditingController(text: widget.lesson.teacher);
+    roomController = TextEditingController(text: widget.lesson.room);
+    timeController = TextEditingController(text: widget.lesson.time);
+  }
+
+  int parseStartTime(String time) {
+    final separators = ["～", "〜", "~", "-", "ー"];
+    String start = time;
+
+    for (var s in separators) {
+      if (time.contains(s)) {
+        start = time.split(s)[0];
+        break;
+      }
+    }
+
+    final parts = start.split(":");
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+
+    return hour * 100 + minute;
   }
 
   @override
@@ -55,12 +73,15 @@ class _EditClassScreenState extends State<EditClassScreen> {
 
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context, {
-                  "name": nameController.text,
-                  "teacher": teacherController.text,
-                  "room": roomController.text,
-                  "time": timeController.text,
-                });
+                final editedLesson = Lesson(
+                  name: nameController.text,
+                  teacher: teacherController.text,
+                  room: roomController.text,
+                  time: timeController.text,
+                  startTime: parseStartTime(timeController.text), // ★ これが必須！
+                );
+
+                Navigator.pop(context, editedLesson);
               },
               child: const Text("保存"),
             ),
