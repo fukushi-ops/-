@@ -4,6 +4,7 @@ import 'assignment_screen.dart';
 import 'sub/class_otherscreen.dart';
 import 'karender/calender_screen.dart';
 import 'lesson_data.dart';
+import 'sub/class_memo.screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -21,9 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final formattedDate = "${now.month}月${now.day}日（${_weekday(now.weekday)}）";
     final today = _weekday(now.weekday);
 
-    print("today = $today");
-
-    // ★ 今日の授業リストを取得
+    // 今日の授業リストを取得
     final lessons = LessonData.lessonsByDay[today]!;
 
     // ★ 時間順に並べる（startTime を使う）
@@ -99,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(15),
                             ),
                             child: const Text(
-                              '今週の予定 ＞',
+                              '＜今週の予定 ＞',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -150,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       lesson.name,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 13,
+                                        fontSize: 20,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -189,9 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 20),
 
-              // =========================
-              // 今日の締切（元のまま）
-              // =========================
+              // 今日の締切
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -457,26 +454,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'その他'),
         ],
       ),
-    );
-  }
-}
-
-class MemoScreen extends StatelessWidget {
-  const MemoScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text('メモ'),
-      ),
-      body: const Center(child: Text('メモ画面', style: TextStyle(fontSize: 20))),
     );
   }
 }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/lesson_data.dart';
-import 'screens/task_data.dart'; // ★ 追加
+import 'screens/task_data.dart';
+import 'screens/sub/class_memo.screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await LessonStorage.load(); // 授業ロード
-  await TaskStorage.load(); // ★ 課題ロード（必須）
+  await TaskStorage.load(); //  課題ロード
 
   runApp(const MyApp());
 }

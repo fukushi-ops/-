@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class OtherScreen extends StatelessWidget {
-  const OtherScreen({super.key});
+class MemoScreen extends StatelessWidget {
+  const MemoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,9 +13,9 @@ class OtherScreen extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
-        title: const Text('その他'),
+        title: const Text('メモ'),
       ),
-      body: const Center(child: Text('その他画面', style: TextStyle(fontSize: 20))),
+      body: const Center(child: Text('メモ画面', style: TextStyle(fontSize: 20))),
     );
   }
 }
