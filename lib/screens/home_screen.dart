@@ -5,6 +5,7 @@ import 'sub/class_otherscreen.dart';
 import 'karender/calender_screen.dart';
 import 'lesson_data.dart';
 import 'sub/class_memo.screen.dart';
+import 'task_data.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -21,6 +22,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final formattedDate = "${now.month}月${now.day}日（${_weekday(now.weekday)}）";
     final today = _weekday(now.weekday);
+    final todayKey =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+    final todayTasks = TaskData.tasks
+        .where((task) => task.deadline == todayKey && !task.isDone)
+        .toList();
 
     // 今日の授業リストを取得
     final lessons = LessonData.lessonsByDay[today]!;
@@ -223,35 +230,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 10),
 
-                    const Row(
-                      children: [
-                        Icon(Icons.description, size: 45, color: Colors.amber),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    if (todayTasks.isEmpty)
+                      const Text('今日が締切の課題はありません')
+                    else
+                      ...todayTasks.map(
+                        (task) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
                             children: [
-                              Text(
-                                'デザイン基礎　レポート提出',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              const Icon(
+                                Icons.description,
+                                size: 45,
+                                color: Colors.amber,
                               ),
-                              SizedBox(height: 8),
-                              Text(
-                                '5月20日（月）23:59まで',
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${task.subject}　${task.title}',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${task.deadline} 締切',
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
               ),
@@ -275,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '今週の課題',
+                          '今月の課題',
                           style: TextStyle(
                             color: Colors.blue,
                             fontSize: 15,
