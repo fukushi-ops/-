@@ -4,7 +4,7 @@ import 'assignment_screen.dart';
 import 'sub/class_otherscreen.dart';
 import 'karender/calender_screen.dart';
 import 'lesson_data.dart';
-import 'sub/class_memo.screen.dart';
+import 'sub/attendance_screen.dart';
 import 'task_data.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -28,6 +28,29 @@ class _HomeScreenState extends State<HomeScreen> {
     final todayTasks = TaskData.tasks
         .where((task) => task.deadline == todayKey && !task.isDone)
         .toList();
+
+    final weekStart = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: now.weekday - 1));
+    final weekEnd = weekStart.add(const Duration(days: 7));
+
+    final weeklyTasks = TaskData.tasks.where((task) {
+      final deadline = DateTime.tryParse(task.deadline);
+
+      return deadline != null &&
+          !deadline.isBefore(weekStart) &&
+          deadline.isBefore(weekEnd);
+    }).toList();
+
+    final completedWeeklyTasks = weeklyTasks
+        .where((task) => task.isDone)
+        .length;
+
+    final weeklyProgress = weeklyTasks.isEmpty
+        ? 0.0
+        : completedWeeklyTasks / weeklyTasks.length;
 
     // 今日の授業リストを取得
     final lessons = LessonData.lessonsByDay[today]!;
@@ -205,24 +228,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontSize: 14,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: const Text(
-                            '残り5時間',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
 
@@ -277,9 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 20),
 
-              // =========================
-              // 今週の課題（元のまま）
-              // =========================
+              // 今週の課題
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -290,11 +293,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '今月の課題',
+                          '今週の課題',
                           style: TextStyle(
                             color: Colors.blue,
                             fontSize: 15,
@@ -302,8 +305,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         Text(
-                          '3 / 5件',
-                          style: TextStyle(
+                          '$completedWeeklyTasks / ${weeklyTasks.length}件',
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
                           ),
@@ -318,8 +321,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         Expanded(
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
-                            child: const LinearProgressIndicator(
-                              value: 0.6,
+                            child: LinearProgressIndicator(
+                              value: weeklyProgress,
                               minHeight: 18,
                               backgroundColor: Colors.white,
                               valueColor: AlwaysStoppedAnimation(
@@ -329,8 +332,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Text(
-                          '60%',
+                        Text(
+                          '${(weeklyProgress * 100).round()}%',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -344,65 +347,73 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 20),
 
-              // =========================
-              // 出席率（元のまま）
-              // =========================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7F3F4),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '出席率',
-                          style: TextStyle(
-                            color: Colors.deepPurple,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 18),
-                        Text(
-                          '全体の出席率',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      width: 65,
-                      height: 65,
-                      child: Stack(
-                        alignment: Alignment.center,
+              // 出席率
+              GestureDetector(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AttendanceScreen()),
+                  );
+                  if (!mounted) return;
+                  setState(() {});
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7F3F4),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const CircularProgressIndicator(
-                            value: 0.85,
-                            strokeWidth: 5,
-                            backgroundColor: Colors.white,
-                            valueColor: AlwaysStoppedAnimation(
-                              Colors.deepPurple,
+                          Text(
+                            '出席率',
+                            style: TextStyle(
+                              color: Colors.deepPurple,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const Text(
-                            '85%',
+                          SizedBox(height: 18),
+                          Text(
+                            '全体の出席率',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                        width: 65,
+                        height: 65,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            const CircularProgressIndicator(
+                              value: 0.85,
+                              strokeWidth: 5,
+                              backgroundColor: Colors.white,
+                              valueColor: AlwaysStoppedAnimation(
+                                Colors.deepPurple,
+                              ),
+                            ),
+                            const Text(
+                              '85%',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -417,37 +428,21 @@ class _HomeScreenState extends State<HomeScreen> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.black,
-        onTap: (index) async {
+        onTap: (index) {
           if (index == 1) {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ClassScreen()),
-            );
-            setState(() {});
+            _openScreen(const ClassScreen());
           }
 
           if (index == 2) {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AssignmentScreen()),
-            );
-            setState(() {});
+            _openScreen(const AssignmentScreen());
           }
 
           if (index == 3) {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const MemoScreen()),
-            );
-            setState(() {});
+            _openScreen(const MemoScreen());
           }
 
           if (index == 4) {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const OtherScreen()),
-            );
-            setState(() {});
+            _openScreen(const OtherScreen());
           }
         },
 
@@ -463,6 +458,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _openScreen(Widget screen) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    if (!mounted) return;
+    setState(() {});
   }
 }
 

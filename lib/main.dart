@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/lesson_data.dart';
 import 'screens/task_data.dart';
-import 'screens/sub/class_memo.screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
