@@ -25,6 +25,17 @@ class AttendanceStorage {
   static const String key = 'attendance_data';
   static Map<String, AttendanceStatus> _statuses = {};
 
+  static int get attendedCount => _statuses.values
+      .where((status) => status == AttendanceStatus.present)
+      .length;
+
+  static int get countedCount => _statuses.values
+      .where((status) => status != AttendanceStatus.excused)
+      .length;
+
+  static double? get attendanceRate =>
+      countedCount == 0 ? null : attendedCount / countedCount;
+
   static AttendanceStatus? statusFor(DateTime date, Lesson lesson) {
     return _statuses[_recordKey(date, lesson)];
   }

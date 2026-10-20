@@ -31,7 +31,7 @@
 |---|---|
 | [`screens/lesson_data.dart`](screens/lesson_data.dart) | 授業データの形式（`Lesson`）、曜日ごとの授業リスト、および `SharedPreferences` への保存・読み込みを定義する。 |
 | [`screens/task_data.dart`](screens/task_data.dart) | 課題データの形式（`Task`）、課題リスト、および `SharedPreferences` への保存・読み込みを定義する。 |
-| [`screens/sub/attendance_data.dart`](screens/sub/attendance_data.dart) | 授業ごとの出席状況と `SharedPreferences` への保存・読み込みを定義する。 |
+| [`screens/sub/attendance_data.dart`](screens/sub/attendance_data.dart) | 授業ごとの出席状況と `SharedPreferences` への保存・読み込みを定義する。出席率は「出席 ÷（出席・欠席・遅刻の記録数）」で計算し、公欠は分母から除外する。 |
 | [`screens/karender/schedule.dart`](screens/karender/schedule.dart) | カレンダー予定のデータ形式（予定名、開始日、終了日、色）を定義する。 |
 
 ## おおまかなデータの流れ

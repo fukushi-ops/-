@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/lesson_data.dart';
+import 'screens/sub/attendance_data.dart';
 import 'screens/task_data.dart';
 
 void main() async {
@@ -8,6 +9,7 @@ void main() async {
 
   await LessonStorage.load(); // 授業ロード
   await TaskStorage.load(); //  課題ロード
+  await AttendanceStorage.load();
 
   runApp(const MyApp());
 }

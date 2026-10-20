@@ -4,6 +4,7 @@ import 'assignment_screen.dart';
 import 'sub/class_otherscreen.dart';
 import 'karender/calender_screen.dart';
 import 'lesson_data.dart';
+import 'sub/attendance_data.dart';
 import 'sub/attendance_screen.dart';
 import 'task_data.dart';
 
@@ -51,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final weeklyProgress = weeklyTasks.isEmpty
         ? 0.0
         : completedWeeklyTasks / weeklyTasks.length;
+    final attendanceRate = AttendanceStorage.attendanceRate;
 
     // 今日の授業リストを取得
     final lessons = LessonData.lessonsByDay[today]!;
@@ -367,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
@@ -380,7 +382,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           SizedBox(height: 18),
                           Text(
-                            '全体の出席率',
+                            attendanceRate == null
+                                ? '出席状況を記録してください'
+                                : '${AttendanceStorage.attendedCount} / ${AttendanceStorage.countedCount}回出席',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -394,16 +398,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            const CircularProgressIndicator(
-                              value: 0.85,
+                            CircularProgressIndicator(
+                              value: attendanceRate ?? 0,
                               strokeWidth: 5,
                               backgroundColor: Colors.white,
-                              valueColor: AlwaysStoppedAnimation(
+                              valueColor: const AlwaysStoppedAnimation(
                                 Colors.deepPurple,
                               ),
                             ),
-                            const Text(
-                              '85%',
+                            Text(
+                              attendanceRate == null
+                                  ? '--%'
+                                  : '${(attendanceRate * 100).round()}%',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
