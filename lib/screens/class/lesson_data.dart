@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Lesson {
@@ -54,32 +55,31 @@ class LessonData {
 class LessonStorage {
   static const String key = "lesson_data";
 
-  // ★ 保存
   static Future<void> save() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Map<String, List<Lesson>> → Map<String, List<Map>>
     final jsonMap = LessonData.lessonsByDay.map((day, list) {
-      return MapEntry(day, list.map((l) => l.toJson()).toList());
+      return MapEntry(day, list.map((lesson) => lesson.toJson()).toList());
     });
 
-    prefs.setString(key, jsonEncode(jsonMap));
+    await prefs.setString(key, jsonEncode(jsonMap));
   }
 
-  // ★ 読み込み（完全修正版）
   static Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(key);
 
     if (jsonString == null) return;
 
-    final decoded = jsonDecode(jsonString);
-
-    // ★ decoded は Map<String, dynamic>
+    final decoded = jsonDecode(jsonString) as Map<String, dynamic>;
     decoded.forEach((day, list) {
-      LessonData.lessonsByDay[day] = (list as List)
-          .map((item) => Lesson.fromJson(item))
-          .toList();
+      if (LessonData.lessonsByDay.containsKey(day)) {
+        LessonData.lessonsByDay[day] = (list as List<dynamic>)
+            .map(
+              (item) => Lesson.fromJson(Map<String, dynamic>.from(item as Map)),
+            )
+            .toList();
+      }
     });
   }
 }

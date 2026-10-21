@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../lesson_data.dart';
+import '../class/lesson_data.dart';
 
 enum AttendanceStatus { present, absent, late, excused }
 

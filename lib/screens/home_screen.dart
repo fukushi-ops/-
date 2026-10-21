@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'class_screen.dart';
-import 'assignment_screen.dart';
-import 'sub/class_otherscreen.dart';
+import 'class/class_screen.dart';
+import 'task/assignment_screen.dart';
+import 'class_otherscreen.dart';
 import 'karender/calender_screen.dart';
-import 'lesson_data.dart';
-import 'sub/attendance_data.dart';
-import 'sub/attendance_screen.dart';
-import 'task_data.dart';
+import 'class/lesson_data.dart';
+import 'otherscreen/attendance_data.dart';
+import 'otherscreen/attendance_screen.dart';
+import 'task/task_data.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;

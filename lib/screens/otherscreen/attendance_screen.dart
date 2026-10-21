@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../lesson_data.dart';
+import '../class/lesson_data.dart';
 import 'attendance_data.dart';
 
 class AttendanceScreen extends StatefulWidget {

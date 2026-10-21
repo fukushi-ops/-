@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-// ==========================================
 // その他画面
-// ==========================================
 
 class OtherScreen extends StatelessWidget {
   const OtherScreen({super.key});
