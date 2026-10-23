@@ -8,7 +8,7 @@ class Lesson {
   String room; // 教室
   String time; // 時間（例：9:00〜10:30）
   int startTime; // 900 のように数値化した時間
-
+  //add_class_screenの返り値として、授業の内容をまとめた Lesson クラスを作る。
   Lesson({
     required this.name,
     required this.teacher,

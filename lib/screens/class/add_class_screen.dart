@@ -72,7 +72,7 @@ class _AddClassScreenState extends State<AddClassScreen> {
                     return;
                   }
 
-                  // ★ Lesson を返す（ここが重要）
+                  //  Lesson を返す（ここが重要）
                   final newLesson = Lesson(
                     name: nameController.text,
                     teacher: teacherController.text,

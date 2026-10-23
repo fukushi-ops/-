@@ -14,9 +14,11 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 選択中のタブに応じて、表示する課題を変更
     List<Task> filteredTasks = _getFilteredTasks();
 
     return Scaffold(
+      // ★ AppBar に戻るボタンを追加
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -27,14 +29,12 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-
-        // ★ 右上の＋ボタンを削除（actions を消す）
       ),
 
       body: Column(
         children: [
           const SizedBox(height: 8),
-
+          // タブボタンの行
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -43,8 +43,9 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
               _buildTabButton('提出済み', 2),
             ],
           ),
-
+          // タブボタンの下に、選択中のタブに応じた課題一覧を表示
           Expanded(
+            // ★ filteredTasks が空の場合は「課題はありません」と表示する。
             child: filteredTasks.isEmpty
                 ? const Center(
                     child: Text('課題はありません', style: TextStyle(fontSize: 16)),
@@ -53,7 +54,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                     itemCount: filteredTasks.length,
                     itemBuilder: (context, index) {
                       final task = filteredTasks[index];
-
+                      // ★ Dismissible で左にスワイプすると削除できるようにする。
                       return Dismissible(
                         key: ValueKey(task.title),
                         direction: DismissDirection.endToStart,
@@ -63,6 +64,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                           padding: const EdgeInsets.only(right: 20),
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
+                        // 左にスワイプすると、この課題を削除する。
                         onDismissed: (_) {
                           setState(() {
                             TaskData.tasks.remove(task);

@@ -31,7 +31,7 @@ class _ClassScreenState extends State<ClassScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 選択中の曜日に登録されている授業を取得する。
+    // 選択中の曜日に登録されている授業を取得する。 lesson.dartのクラス
     final todayClassList = LessonData.lessonsByDay[selectedDay]!;
 
     return Scaffold(
@@ -43,7 +43,7 @@ class _ClassScreenState extends State<ClassScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: DropdownButton<String>(
-              value: selectedDay,
+              value: selectedDay, //初期値は月
               // 各曜日の文字列を、ドロップダウンの選択項目に変換する。
               items: ["月", "火", "水", "木", "金", "土", "日"].map((day) {
                 return DropdownMenuItem(value: day, child: Text(day));
@@ -60,8 +60,10 @@ class _ClassScreenState extends State<ClassScreen> {
           // 選択中の曜日の授業を一覧表示する。
           Expanded(
             child: ListView.builder(
+              // 選択中の曜日の授業の数だけ ListTile を作る。
               itemCount: todayClassList.length,
               itemBuilder: (context, index) {
+                // 選択中の曜日の授業が入ったリストから、index 番目の授業を取り出す。
                 final lesson = todayClassList[index];
 
                 // 左にスワイプすると、この授業を削除する。
@@ -83,6 +85,7 @@ class _ClassScreenState extends State<ClassScreen> {
                     await _saveLessons();
                   },
 
+                  // 授業の内容を表示する ListTile。
                   child: ListTile(
                     title: Text(lesson.name),
                     subtitle: Text(
@@ -95,7 +98,7 @@ class _ClassScreenState extends State<ClassScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => EditClassScreen(
-                            lesson: lesson, // ★ Lesson を渡す
+                            lesson: lesson, //  Lesson を渡す
                           ),
                         ),
                       );
@@ -127,7 +130,7 @@ class _ClassScreenState extends State<ClassScreen> {
 
           if (result != null) {
             setState(() {
-              // 追加画面から戻ってきた授業を、選択中の曜日に登録する。
+              // 追加画面から戻ってきた授業を、選択中の曜日に登録する。リストの最後に追加する。
               LessonData.lessonsByDay[selectedDay]!.add(result);
             });
             // 追加した授業をFirebaseに保存する。

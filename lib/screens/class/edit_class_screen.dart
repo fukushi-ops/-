@@ -19,7 +19,7 @@ class _EditClassScreenState extends State<EditClassScreen> {
   @override
   void initState() {
     super.initState();
-
+    // 初期値として、渡された Lesson の内容をコントローラーに設定する。
     nameController = TextEditingController(text: widget.lesson.name);
     teacherController = TextEditingController(text: widget.lesson.teacher);
     roomController = TextEditingController(text: widget.lesson.room);
