@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'screens/home_screen.dart';
 import 'screens/class/lesson_data.dart';
 import 'screens/otherscreen/attendance_data.dart';
@@ -10,6 +11,7 @@ void main() async {
 }
 
 Future<void> _initializeApp() async {
+  await initializeDateFormatting('ja_JP');
   await LessonStorage.load();
   await TaskStorage.load();
   await AttendanceStorage.load();

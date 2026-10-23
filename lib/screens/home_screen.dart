@@ -460,7 +460,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.description), label: '課題'),
           BottomNavigationBarItem(icon: Icon(Icons.sticky_note_2), label: 'メモ'),
-          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'その他'),
+          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: '設定'),
         ],
       ),
     );

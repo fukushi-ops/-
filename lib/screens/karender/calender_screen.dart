@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'schedule.dart';
+import 'package:table_calendar/table_calendar.dart';
+
 import 'add_schedule_screen.dart';
+import 'schedule.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -12,107 +14,92 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   final List<Schedule> schedules = [];
 
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay = DateUtils.dateOnly(DateTime.now());
+
+  List<Schedule> _eventsForDay(DateTime day) {
+    final date = DateUtils.dateOnly(day);
+
+    return schedules.where((schedule) {
+      final start = DateUtils.dateOnly(schedule.startDate);
+      final end = DateUtils.dateOnly(schedule.endDate);
+
+      return !date.isBefore(start) && !date.isAfter(end);
+    }).toList();
+  }
+
+  Future<void> _addSchedule() async {
+    final result = await Navigator.push<Schedule>(
+      context,
+      MaterialPageRoute(builder: (_) => const AddScheduleScreen()),
+    );
+
+    if (result != null) {
+      setState(() {
+        schedules.add(result);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final selectedEvents = _selectedDay == null
+        ? <Schedule>[]
+        : _eventsForDay(_selectedDay!);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("1月カレンダー"),
+        title: Text('${_focusedDay.year}年${_focusedDay.month}月カレンダー'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddScheduleScreen()),
-              );
-
-              if (result != null) {
-                setState(() => schedules.add(result));
-              }
-            },
-          ),
+          IconButton(icon: const Icon(Icons.add), onPressed: _addSchedule),
         ],
       ),
-
       body: Column(
         children: [
-          Row(
-            children: const [
-              _DayHeader("月"),
-              _DayHeader("火"),
-              _DayHeader("水"),
-              _DayHeader("木"),
-              _DayHeader("金"),
-              _DayHeader("土"),
-              _DayHeader("日"),
-            ],
-          ),
-
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 7,
-              ),
-              itemCount: 31,
-              itemBuilder: (context, index) {
-                final day = index + 1;
-
-                final todays = schedules.where(
-                  (s) => day >= s.startDay && day <= s.endDay,
-                );
-
-                return Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("$day"),
-                      ...todays.map(
-                        (s) => Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          height: 18,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: s.color,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Center(
-                            child: Text(
-                              s.title,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+          TableCalendar<Schedule>(
+            firstDay: DateTime(2000, 1, 1),
+            lastDay: DateTime(2100, 12, 31),
+            focusedDay: _focusedDay,
+            locale: 'ja_JP',
+            calendarFormat: CalendarFormat.month,
+            headerStyle: const HeaderStyle(
+              titleCentered: true,
+              formatButtonVisible: false,
             ),
+            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+            eventLoader: _eventsForDay,
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+            },
+            onPageChanged: (focusedDay) {
+              setState(() {
+                _focusedDay = focusedDay;
+              });
+            },
+          ),
+          const Divider(),
+          Expanded(
+            child: selectedEvents.isEmpty
+                ? const Center(child: Text('この日の予定はありません'))
+                : ListView.builder(
+                    itemCount: selectedEvents.length,
+                    itemBuilder: (context, index) {
+                      final schedule = selectedEvents[index];
+
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: schedule.color,
+                          radius: 8,
+                        ),
+                        title: Text(schedule.title),
+                      );
+                    },
+                  ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DayHeader extends StatelessWidget {
-  final String text;
-  const _DayHeader(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        color: Colors.grey.shade200,
-        child: Center(child: Text(text)),
       ),
     );
   }
