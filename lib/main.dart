@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'screens/home_screen.dart';
 import 'screens/class/lesson_data.dart';
 import 'screens/otherscreen/attendance_data.dart';
 import 'screens/task/task_data.dart';
+import 'screens/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,7 +66,7 @@ class _AppStartupState extends State<_AppStartup> {
           );
         }
 
-        return const HomeScreen(userName: '結菜さん');
+        return const MainScreen(userName: '結菜さん');
       },
     );
   }

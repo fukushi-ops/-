@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_assignment_screen.dart';
 import 'task_data.dart'; // ★ TaskData / TaskStorage を使う
+import 'EditAssingumentScreen.dart'; // ★ 課題編集画面を使う
 
 class AssignmentScreen extends StatefulWidget {
   const AssignmentScreen({super.key});
@@ -20,10 +21,6 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
     return Scaffold(
       // ★ AppBar に戻るボタンを追加
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: const Text(
           '課題一覧',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -74,7 +71,22 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                         child: ListTile(
                           title: Text(task.title),
                           subtitle: Text("${task.subject} / ${task.deadline}"),
-
+                          onTap: () async {
+                            final editedTask = await Navigator.push<Task>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    EditAssignmentScreen(task: task),
+                              ),
+                            );
+                            if (!mounted || editedTask == null) return;
+                            setState(() {
+                              task.title = editedTask.title;
+                              task.subject = editedTask.subject;
+                              task.deadline = editedTask.deadline;
+                            });
+                            await TaskStorage.save();
+                          },
                           trailing: Checkbox(
                             value: task.isDone,
                             onChanged: (value) {
@@ -127,8 +139,9 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   // タブボタン
   Widget _buildTabButton(String text, int index) {
     final bool isSelected = selectedIndex == index;
-
+    // タップ時の処理を追加して、選択中のタブを更新するようにします。
     return GestureDetector(
+      // タップされたときに選択中のタブを更新
       onTap: () {
         setState(() {
           selectedIndex = index;

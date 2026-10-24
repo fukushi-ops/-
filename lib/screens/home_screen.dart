@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'class/class_screen.dart';
-import 'task/assignment_screen.dart';
-import 'class_otherscreen.dart';
+
 import 'karender/calender_screen.dart';
 import 'class/lesson_data.dart';
 import 'otherscreen/attendance_data.dart';
@@ -428,48 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.black,
-        onTap: (index) {
-          if (index == 1) {
-            _openScreen(const ClassScreen());
-          }
-
-          if (index == 2) {
-            _openScreen(const AssignmentScreen());
-          }
-
-          if (index == 3) {
-            _openScreen(const MemoScreen());
-          }
-
-          if (index == 4) {
-            _openScreen(const OtherScreen());
-          }
-        },
-
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: '時間割',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.description), label: '課題'),
-          BottomNavigationBarItem(icon: Icon(Icons.sticky_note_2), label: 'メモ'),
-          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: '設定'),
-        ],
-      ),
     );
-  }
-
-  Future<void> _openScreen(Widget screen) async {
-    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
-    if (!mounted) return;
-    setState(() {});
   }
 }
 
