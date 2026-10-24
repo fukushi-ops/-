@@ -82,7 +82,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     )..sort((a, b) => a.startTime.compareTo(b.startTime));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('出席状況')),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          tooltip: '戻る',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+        title: const Text('出席状況'),
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : loadError != null
@@ -215,26 +223,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 ),
               ],
             ),
-    );
-  }
-}
-
-class MemoScreen extends StatelessWidget {
-  const MemoScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text('メモ'),
-      ),
-      body: const Center(child: Text('メモ画面', style: TextStyle(fontSize: 20))),
     );
   }
 }

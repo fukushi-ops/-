@@ -4,7 +4,7 @@ import 'class/class_screen.dart';
 import 'class_otherscreen.dart';
 import 'home_screen.dart';
 import 'task/assignment_screen.dart';
-import 'otherscreen/attendance_screen.dart';
+import 'otherscreen/memoscreen.dart';
 
 class MainScreen extends StatefulWidget {
   final String userName;

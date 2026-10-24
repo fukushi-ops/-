@@ -8,8 +8,8 @@ class OtherScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('その他')),
-      body: const Center(child: Text('その他画面', style: TextStyle(fontSize: 20))),
+      appBar: AppBar(title: const Text('設定')),
+      body: const Center(child: Text('設定画面', style: TextStyle(fontSize: 20))),
     );
   }
 }

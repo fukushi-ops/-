@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+
 import 'add_class_screen.dart';
 import 'edit_class_screen.dart';
 import 'lesson_data.dart';
@@ -12,7 +13,7 @@ class ClassScreen extends StatefulWidget {
 }
 
 class _ClassScreenState extends State<ClassScreen> {
-  // 授業一覧に表示する曜日。画面を開いた直後は月曜日を表示する。
+  static const _days = ["月", "火", "水", "木", "金", "土", "日"];
   String selectedDay = "月";
 
   Future<void> _saveLessons() async {
@@ -29,115 +30,196 @@ class _ClassScreenState extends State<ClassScreen> {
     }
   }
 
+  Future<void> _addLesson() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddClassScreen()),
+    );
+
+    if (result != null) {
+      setState(() {
+        LessonData.lessonsByDay[selectedDay]!.add(result);
+      });
+      await _saveLessons();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // 選択中の曜日に登録されている授業を取得する。 lesson.dartのクラス
-    final todayClassList = LessonData.lessonsByDay[selectedDay]!;
+    final lessons = LessonData.lessonsByDay[selectedDay]!;
+    final sortedLessons = List.of(lessons)
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('授業一覧')),
-
+      appBar: AppBar(title: const Text('授業一覧'), centerTitle: true),
       body: Column(
         children: [
-          // 表示する曜日を選ぶドロップダウン。
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: DropdownButton<String>(
-              value: selectedDay, //初期値は月
-              // 各曜日の文字列を、ドロップダウンの選択項目に変換する。
-              items: ["月", "火", "水", "木", "金", "土", "日"].map((day) {
-                return DropdownMenuItem(value: day, child: Text(day));
-              }).toList(),
-              // 曜日が選ばれたら選択状態を更新し、画面を再描画する。
-              onChanged: (value) {
-                setState(() {
-                  selectedDay = value!;
-                });
-              },
-            ),
-          ),
-
-          // 選択中の曜日の授業を一覧表示する。
-          Expanded(
-            child: ListView.builder(
-              // 選択中の曜日の授業の数だけ ListTile を作る。
-              itemCount: todayClassList.length,
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              scrollDirection: Axis.horizontal,
+              itemCount: _days.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
-                // 選択中の曜日の授業が入ったリストから、index 番目の授業を取り出す。
-                final lesson = todayClassList[index];
-
-                // 左にスワイプすると、この授業を削除する。
-                return Dismissible(
-                  key: ValueKey("${lesson.name}_${lesson.time}"),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  onDismissed: (_) async {
+                final day = _days[index];
+                return ChoiceChip(
+                  label: Text('$day曜日'),
+                  selected: selectedDay == day,
+                  onSelected: (_) {
                     setState(() {
-                      // 選択中の曜日のリストから授業を取り除く。
-                      LessonData.lessonsByDay[selectedDay]!.removeAt(index);
+                      selectedDay = day;
                     });
-                    // 変更した授業一覧をFirebaseに保存する。
-                    await _saveLessons();
                   },
-
-                  // 授業の内容を表示する ListTile。
-                  child: ListTile(
-                    title: Text(lesson.name),
-                    subtitle: Text(
-                      "${lesson.room} / ${lesson.teacher} / ${lesson.time}",
-                    ),
-
-                    // 授業をタップすると編集画面を開き、編集後の授業を受け取る。
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EditClassScreen(
-                            lesson: lesson, //  Lesson を渡す
-                          ),
-                        ),
-                      );
-
-                      if (result != null) {
-                        setState(() {
-                          // 編集後の授業で一覧の元の項目を置き換える。
-                          todayClassList[index] = result;
-                        });
-                        await _saveLessons();
-                      }
-                    },
-                  ),
                 );
               },
             ),
           ),
+          Expanded(
+            child: sortedLessons.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.menu_book_outlined,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '$selectedDay曜日の授業はありません',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text('＋ボタンから授業を登録できます'),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                    itemCount: sortedLessons.length,
+                    itemBuilder: (context, index) {
+                      final lesson = sortedLessons[index];
+                      return Dismissible(
+                        key: ObjectKey(lesson),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onDismissed: (_) async {
+                          setState(() {
+                            lessons.remove(lesson);
+                          });
+                          await _saveLessons();
+                        },
+                        child: Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          clipBehavior: Clip.antiAlias,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            leading: CircleAvatar(
+                              radius: 28,
+                              child: Text(
+                                '${index + 1}\n限目',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.1,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              lesson.name,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _LessonDetail(
+                                    icon: Icons.access_time,
+                                    text: lesson.time,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  _LessonDetail(
+                                    icon: Icons.meeting_room_outlined,
+                                    text: lesson.room,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  _LessonDetail(
+                                    icon: Icons.person_outline,
+                                    text: lesson.teacher,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      EditClassScreen(lesson: lesson),
+                                ),
+                              );
+
+                              if (result != null) {
+                                setState(() {
+                                  final lessonIndex = lessons.indexOf(lesson);
+                                  if (lessonIndex != -1) {
+                                    lessons[lessonIndex] = result;
+                                  }
+                                });
+                                await _saveLessons();
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
         ],
       ),
-
-      // 「＋」ボタンから授業追加画面を開く。
       floatingActionButton: FloatingActionButton(
+        onPressed: _addLesson,
         child: const Icon(Icons.add),
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddClassScreen()),
-          );
-
-          if (result != null) {
-            setState(() {
-              // 追加画面から戻ってきた授業を、選択中の曜日に登録する。リストの最後に追加する。
-              LessonData.lessonsByDay[selectedDay]!.add(result);
-            });
-            // 追加した授業をFirebaseに保存する。
-            await _saveLessons();
-          }
-        },
       ),
+    );
+  }
+}
+
+class _LessonDetail extends StatelessWidget {
+  const _LessonDetail({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Theme.of(context).colorScheme.secondary),
+        const SizedBox(width: 6),
+        Expanded(child: Text(text)),
+      ],
     );
   }
 }

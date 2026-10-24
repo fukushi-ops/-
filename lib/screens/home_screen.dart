@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'karender/calender_screen.dart';
+import 'carender/calender_screen.dart';
 import 'class/lesson_data.dart';
 import 'otherscreen/attendance_data.dart';
 import 'otherscreen/attendance_screen.dart';
@@ -52,11 +52,9 @@ class _HomeScreenState extends State<HomeScreen> {
         : completedWeeklyTasks / weeklyTasks.length;
     final attendanceRate = AttendanceStorage.attendanceRate;
 
-    // 今日の授業リストを取得
-    final lessons = LessonData.lessonsByDay[today]!;
-
-    // ★ 時間順に並べる（startTime を使う）
-    lessons.sort((a, b) => a.startTime.compareTo(b.startTime));
+    final lessons = List<Lesson>.from(
+      LessonData.lessonsByDay[today] ?? const <Lesson>[],
+    )..sort((a, b) => a.startTime.compareTo(b.startTime));
 
     return Scaffold(
       appBar: AppBar(
@@ -98,19 +96,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          formattedDate,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              formattedDate,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '今日の授業  ${lessons.length}件',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
-                        GestureDetector(
-                          onTap: () {
+                        TextButton.icon(
+                          onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -118,89 +128,124 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFDDEEFF),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: const Text(
-                              '＜今週の予定 ＞',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          icon: const Icon(Icons.calendar_month, size: 18),
+                          label: const Text('今週の予定'),
+                          style: TextButton.styleFrom(
+                            backgroundColor: const Color(0xFFDDEEFF),
+                            visualDensity: VisualDensity.compact,
                           ),
                         ),
                       ],
                     ),
-
-                    const Divider(color: Colors.black),
-
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        '今日の授業',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-
                     const SizedBox(height: 12),
+                    if (lessons.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.event_available,
+                              size: 34,
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text('今日は授業がありません'),
+                          ],
+                        ),
+                      )
+                    else
+                      ...lessons.indexed.map((entry) {
+                        final index = entry.$1;
+                        final lesson = entry.$2;
+                        final color = Theme.of(context).colorScheme.primary;
 
-                    Column(
-                      children: lessons.map((lesson) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border(
+                              left: BorderSide(color: color, width: 5),
+                            ),
+                          ),
                           child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 14,
+                                ),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      lesson.name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
+                                      '${index + 1}',
+                                      style: TextStyle(
+                                        color: color,
                                         fontSize: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '教室: ${lesson.room}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.teal,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(
-                                      '先生: ${lesson.teacher}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.teal,
-                                      ),
-                                    ),
-                                    Text(
-                                      '時間: ${lesson.time}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.teal,
+                                      '時限目',
+                                      style: TextStyle(
+                                        color: color,
+                                        fontSize: 11,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    0,
+                                    14,
+                                    12,
+                                    14,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        lesson.name,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 7),
+                                      _HomeLessonDetail(
+                                        icon: Icons.access_time,
+                                        text: lesson.time,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      _HomeLessonDetail(
+                                        icon: Icons.meeting_room_outlined,
+                                        text: lesson.room,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      _HomeLessonDetail(
+                                        icon: Icons.person_outline,
+                                        text: lesson.teacher,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         );
-                      }).toList(),
-                    ),
+                      }),
                   ],
                 ),
               ),
@@ -426,6 +471,30 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _HomeLessonDetail extends StatelessWidget {
+  const _HomeLessonDetail({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: Theme.of(context).colorScheme.secondary),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodySmall,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }
