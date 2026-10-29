@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>アプリのファイル・機能 詳細ガイド</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17243a;
+      --muted: #526176;
+      --accent: #2459a6;
+      --line: #d7dfeb;
+      --panel: #f2f6fb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 36px 44px 56px;
+      color: var(--ink);
+      font-family: "Yu Gothic", "Meiryo", sans-serif;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+    h1, h2, h3 { line-height: 1.4; page-break-after: avoid; }
+    h1 { margin: 0; font-size: 2.1rem; }
+    h2 {
+      margin: 2.2em 0 0.8em;
+      padding-bottom: 0.35em;
+      border-bottom: 2px solid var(--accent);
+      color: var(--accent);
+      font-size: 1.55rem;
+    }
+    h3 { margin: 1.3em 0 0.35em; font-size: 1.12rem; }
+    p { margin: 0.55em 0; }
+    ul, ol { margin: 0.4em 0 0.8em; padding-left: 1.6em; }
+    li { margin: 0.18em 0; }
+    code {
+      padding: 0.08em 0.3em;
+      border-radius: 4px;
+      background: #edf1f6;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.92em;
+      overflow-wrap: anywhere;
+    }
+    a { color: #174f9a; text-decoration: none; }
+    .cover {
+      min-height: 72vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-bottom: 3px solid var(--accent);
+    }
+    .cover .eyebrow { color: var(--accent); font-weight: bold; letter-spacing: 0.08em; }
+    .cover .subtitle { margin-top: 1em; color: var(--muted); font-size: 1.12rem; }
+    .cover .date { margin-top: 2.5em; color: var(--muted); }
+    .note, .flow, .definition {
+      margin: 1em 0;
+      padding: 0.9em 1.1em;
+      border-left: 4px solid var(--accent);
+      background: var(--panel);
+      page-break-inside: avoid;
+    }
+    .file {
+      margin: 1.3em 0 1.7em;
+      padding: 0.1em 1em 0.8em;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      page-break-inside: avoid;
+    }
+    .file h3 { color: var(--accent); }
+    .path { color: var(--muted); font-family: Consolas, "Courier New", monospace; font-size: 0.9em; }
+    .tag {
+      display: inline-block;
+      margin-right: 0.35em;
+      padding: 0.05em 0.45em;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 0.82em;
+      line-height: 1.6;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 0.8em 0 1.2em; }
+    th, td { padding: 0.5em 0.65em; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: var(--panel); }
+    .toc li { margin: 0.35em 0; }
+    .small { color: var(--muted); font-size: 0.9em; }
+    .page-break { page-break-before: always; }
+    .screen-only { display: block; }
+    @media screen {
+      body { box-shadow: 0 2px 24px #10243b1c; }
+    }
+    @media print {
+      @page { size: A4; margin: 17mm 16mm 18mm; }
+      body { max-width: none; padding: 0; font-size: 10.5pt; }
+      h1 { font-size: 25pt; }
+      h2 { font-size: 16pt; margin-top: 1.7em; }
+      h3 { font-size: 12pt; }
+      a { color: inherit; }
+      .screen-only { display: none !important; }
+      .cover { min-height: 245mm; }
+      .file { border-radius: 0; }
+      table, .file, .note, .flow, .definition { break-inside: avoid; }
+      h2, h3 { break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <p class="eyebrow">FLUTTER APPLICATION · SOURCE GUIDE</p>
+    <h1>アプリのファイル・機能<br>詳細ガイド</h1>
+    <p class="subtitle">時間割・課題・カレンダー・出席管理アプリの構成と、各ファイル／クラスの役割を説明します。</p>
+    <p class="date">対象：現在のプロジェクトソース<br>作成日：2026年10月26日</p>
+  </header>
+
+  <section>
+    <h2>この資料の使い方</h2>
+    <p>この資料は、プロジェクトのソースコードを「どのファイルが何を担当しているか」という視点で説明したものです。画面の操作だけではなく、画面・データ・端末保存の関係や、各クラスの役割も記載しています。</p>
+    <div class="note screen-only">
+      <strong>印刷方法：</strong>このHTMLファイルをEdgeなどのブラウザーで開き、<code>Ctrl + P</code> を押します。プリンターを選ぶか「PDFとして保存」を選択してください。印刷プレビューで用紙サイズがA4になっていることを確認します。
+    </div>
+    <p class="small">説明は確認時点のソースに基づきます。コードが更新された場合、画面仕様やファイル名とこの資料が一致しなくなる可能性があります。</p>
+  </section>
+
+  <section>
+    <h2>目次</h2>
+    <ol class="toc">
+      <li>アプリ全体の構成とデータの流れ</li>
+      <li>起動・画面切り替え・ホーム画面</li>
+      <li>時間割（授業）のファイルとクラス</li>
+      <li>課題のファイルとクラス</li>
+      <li>カレンダー予定のファイルとクラス</li>
+      <li>出席管理・メモ・設定</li>
+      <li>プロジェクト設定・テスト</li>
+      <li>用語集と保守上の注意点</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>1. アプリ全体の構成とデータの流れ</h2>
+    <p>アプリはFlutterで作られています。画面はFlutterのWidget（ウィジェット）を組み合わせて表示し、利用者が入力した値はデータクラスにまとめられます。授業・課題・出席記録はSharedPreferencesを使って端末内に保存します。</p>
+    <div class="flow">
+      <strong>起動：</strong><code>main.dart</code> → 日本語表示の準備 → 授業・課題・出席データの読み込み → <code>MainScreen</code><br>
+      <strong>画面遷移：</strong><code>MainScreen</code> → ホーム／時間割／課題／メモ／設定<br>
+      <strong>授業：</strong>入力画面 → <code>Lesson</code> → <code>LessonData</code> → <code>LessonStorage</code> → 端末保存<br>
+      <strong>課題：</strong>入力画面 → <code>Task</code> → <code>TaskData</code> → <code>TaskStorage</code> → 端末保存<br>
+      <strong>出席：</strong>授業と日付を組み合わせて状態を記録 → <code>AttendanceStorage</code> → 端末保存
+    </div>
+    <h3>プロジェクト内の主なフォルダー</h3>
+    <table>
+      <thead><tr><th>場所</th><th>役割</th></tr></thead>
+      <tbody>
+        <tr><td><code>lib/</code></td><td>Flutterアプリ本体のDartソースコード。</td></tr>
+        <tr><td><code>lib/screens/</code></td><td>ホーム、時間割、課題などの画面と、その画面で使うデータ処理。</td></tr>
+        <tr><td><code>test/</code></td><td>自動テストのソースコード。</td></tr>
+        <tr><td><code>android/</code>、<code>ios/</code>、<code>windows/</code>等</td><td>各OSでアプリを動かすためのFlutterプラットフォーム設定・ネイティブ側の土台。</td></tr>
+        <tr><td><code>build/</code>、<code>.dart_tool/</code></td><td>ビルドやツール実行時に生成されるファイル。通常、画面機能の編集対象ではありません。</td></tr>
+      </tbody>
+    </table>
+    <h3>画面とデータの分担</h3>
+    <ul>
+      <li><strong>Screen / Widget：</strong>入力欄、ボタン、一覧など、利用者が見る画面を作ります。</li>
+      <li><strong>State：</strong>選択中の日付・タブなど、画面が表示されている間に変化する状態を持ちます。状態変更後に <code>setState</code> を呼ぶと画面が再構築されます。</li>
+      <li><strong>Model（データクラス）：</strong><code>Task</code>や<code>Lesson</code>のように、1件のデータを表します。</li>
+      <li><strong>Storage：</strong>データをJSON形式に変換し、端末に保存・読み込みします。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>2. 起動・画面切り替え・ホーム画面</h2>
+    <article class="file">
+      <h3><code>lib/main.dart</code></h3>
+      <p>Flutterアプリの起動点です。日本語ローカライズを設定し、アプリ起動前に保存データを読み込みます。</p>
+      <ul>
+        <li><code>main()</code>：Flutterの初期化を行い、<code>MyApp</code>を起動します。</li>
+        <li><code>_initializeApp()</code>：日本語の日付表示情報を初期化し、<code>LessonStorage</code>、<code>TaskStorage</code>、<code>AttendanceStorage</code>から端末内データを順に読み込みます。</li>
+        <li><code>MyApp</code>：<code>MaterialApp</code>を作り、ロケールを日本語（<code>ja_JP</code>）に設定します。</li>
+        <li><code>_AppStartup</code> / <code>_AppStartupState</code>：FutureBuilderで初期化の完了を待ちます。読み込み中は進行表示、完了後はメイン画面、失敗時はエラー画面を表示します。</li>
+        <li><code>_StartupErrorScreen</code>：初期化エラーを表示し、再試行ボタンで初期化をやり直せる画面です。</li>
+      </ul>
+      <p><strong>データへの影響：</strong>読み込みが完了する前にメイン画面を出さないことで、保存済みデータの復元前に空の一覧が表示されるのを防いでいます。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/main_screen.dart</code></h3>
+      <p>アプリの下部ナビゲーションを管理し、主要画面を切り替える親画面です。</p>
+      <ul>
+        <li><code>MainScreen</code>：利用者名を受け取り、画面全体を構成します。</li>
+        <li><code>_MainScreenState</code>：<code>_selectedIndex</code>で現在のタブを管理します。<code>IndexedStack</code>を使うため、タブを切り替えても各画面の状態を保持します。</li>
+      </ul>
+      <p>タブは、ホーム、時間割、課題、メモ、設定の5つです。時間割タブは<code>ClassScreen</code>、課題タブは<code>AssignmentScreen</code>に接続します。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/home_screen.dart</code></h3>
+      <p>今日の授業、今日が締切の課題、今週の課題の提出進捗、出席率をまとめて見せるダッシュボードです。</p>
+      <ul>
+        <li><code>HomeScreen</code>：画面に挨拶として表示する利用者名を受け取ります。</li>
+        <li><code>_HomeScreenState</code>：現在日付を取得し、画面に出す授業・課題・出席率を計算してUIを構築します。</li>
+        <li><code>_HomeLessonDetail</code>：アイコンと説明文字を横並びにする、画面内だけで使う小さな表示Widgetです。</li>
+        <li><code>_weekday()</code>：曜日番号を「月」から「日」の文字に変換します。</li>
+      </ul>
+      <p><strong>今日の授業：</strong>曜日をキーに<code>LessonData.lessonsByDay</code>から授業を取り出し、開始時刻順に並べます。「今週の予定」ボタンからカレンダー画面へ移動します。</p>
+      <p><strong>今日の締切：</strong>課題の締切文字列が今日の<code>YYYY-MM-DD</code>と完全一致し、<code>isDone</code>がfalseの課題を表示します。日付の書式が違う場合や提出済みの場合は表示対象になりません。</p>
+      <p><strong>今週の課題：</strong>月曜日から翌週月曜日の直前までに締切がある課題を対象にします。<code>DateTime.tryParse</code>で解析できない締切は対象外です。ここでは課題名一覧ではなく、完了件数／全件数と進捗率だけを表示します。提出済みも分母（全件数）に含みます。</p>
+      <p><strong>出席率：</strong><code>AttendanceStorage</code>から率と回数を取得します。出席欄を押すと出席状況画面に移動し、戻ってきた後にホーム画面を再描画します。</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>3. 時間割（授業）のファイルとクラス</h2>
+    <article class="file">
+      <h3><code>lib/screens/class/lesson_data.dart</code></h3>
+      <p>授業1件の構造、曜日別の授業一覧、端末保存をまとめたファイルです。</p>
+      <ul>
+        <li><code>Lesson</code>：授業名（<code>name</code>）、先生（<code>teacher</code>）、教室（<code>room</code>）、表示用時間（<code>time</code>）、並べ替え用開始時刻（<code>startTime</code>）を持ちます。<code>toJson()</code>と<code>fromJson()</code>でJSONとの変換を行います。</li>
+        <li><code>LessonData</code>：月曜から日曜までをキーにした静的な授業リストを保持します。実行中の画面は同じデータを参照します。</li>
+        <li><code>LessonStorage</code>：SharedPreferencesの<code>lesson_data</code>キーにJSONを保存し、起動時に復元します。</li>
+      </ul>
+      <p><code>startTime</code>は<code>9:00</code>なら<code>900</code>のような整数で、時刻順ソートに使用します。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/class/class_screen.dart</code></h3>
+      <p>曜日ごとに時間割を表示し、授業の追加・編集・削除を行う画面です。</p>
+      <ul>
+        <li><code>ClassScreen</code> / <code>_ClassScreenState</code>：曜日選択状態を保持し、選択曜日の授業を開始時刻順に表示します。</li>
+        <li><code>_addLesson()</code>：授業追加画面を開き、戻り値があれば選択曜日のリストへ追加して保存します。</li>
+        <li><code>_saveLessons()</code>：保存失敗をスナックバーで通知し、再試行手段を表示します。</li>
+        <li><code>_LessonDetail</code>：授業の時間・教室・先生をアイコン付きで表示する補助Widgetです。</li>
+      </ul>
+      <p>授業カードをタップすると編集画面へ進み、保存後は対象の授業を置き換えます。カードを左へスワイプすると削除します。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/class/add_class_screen.dart</code></h3>
+      <p>新しい授業の名前・先生・教室・時間を入力する画面です。</p>
+      <ul>
+        <li><code>AddClassScreen</code> / <code>_AddClassScreenState</code>：テキスト入力欄と「保存」ボタンを表示します。</li>
+        <li><code>parseStartTime()</code>：時間帯の先頭時刻を分離し、<code>HHMM</code>相当の整数へ変換します。時間帯の区切りとして複数の波線・ハイフンを扱います。</li>
+      </ul>
+      <p>必須欄が空なら案内を出して保存を止めます。入力値から<code>Lesson</code>を作成し、Navigatorの戻り値として時間割画面へ返します。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/class/edit_class_screen.dart</code></h3>
+      <p>登録済み授業を編集する画面です。<code>EditClassScreen</code>は対象の<code>Lesson</code>を受け取り、<code>_EditClassScreenState</code>が入力欄の初期値として各項目を設定します。</p>
+      <p>保存時は入力値と再計算した開始時刻から新しい<code>Lesson</code>を作り、前の画面へ返します。実際のリスト差し替えと端末保存は<code>ClassScreen</code>側の役割です。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/class_otherscreen.dart</code></h3>
+      <p><code>OtherScreen</code>を定義し、現状は「設定」という見出しと「設定画面」という案内を表示します。実際の設定項目はまだ実装されていないプレースホルダー画面です。</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>4. 課題のファイルとクラス</h2>
+    <article class="file">
+      <h3><code>lib/screens/task/task_data.dart</code></h3>
+      <p>課題データの型、実行中の一覧、端末保存を担当します。</p>
+      <ul>
+        <li><code>Task</code>：課題名（<code>title</code>）、科目（<code>subject</code>）、締切（<code>deadline</code>）、提出済みか（<code>isDone</code>）を保持します。初期状態では<code>isDone</code>はfalseです。</li>
+        <li><code>Task.toJson()</code> / <code>Task.fromJson()</code>：課題データをJSONへ変換し、保存データから復元します。</li>
+        <li><code>TaskData</code>：アプリ実行中の課題一覧<code>tasks</code>を保持します。</li>
+        <li><code>TaskStorage</code>：SharedPreferencesの<code>task_data</code>キーを使い、課題一覧を保存・読み込みします。</li>
+      </ul>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/task/assignment_screen.dart</code></h3>
+      <p>課題一覧、提出状態の切り替え、課題の編集・削除・追加をまとめた画面です。</p>
+      <ul>
+        <li><code>AssignmentScreen</code> / <code>_AssignmentScreenState</code>：一覧画面と選択中タブを管理します。</li>
+        <li><code>_getFilteredTasks()</code>：「すべて」「未提出」「提出済み」の条件で<code>TaskData.tasks</code>を絞り込みます。</li>
+        <li><code>_buildTabButton()</code>：タブボタンを作り、選択状態を更新します。</li>
+      </ul>
+      <p>追加ボタンは<code>AddAssignmentScreen</code>を開き、返された課題を一覧に追加して保存します。チェックボックスで提出状態を変更します。左スワイプで削除し、行をタップすると編集画面へ移動します。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/task/add_assignment_screen.dart</code></h3>
+      <p>課題名・科目名・締切を入力して新しい課題を作成します。</p>
+      <ul>
+        <li><code>AddAssignmentScreen</code> / <code>_AddAssignmentScreenState</code>：入力欄と追加ボタンを管理します。</li>
+        <li>3項目のいずれかが空の場合はスナックバーで知らせ、追加を中止します。</li>
+        <li>入力された締切は文字列のまま<code>Task.deadline</code>へ入ります。画面の例は<code>2026-08-09</code>形式です。</li>
+        <li>作成した<code>Task</code>をNavigatorの戻り値として一覧画面へ返します。</li>
+      </ul>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/task/edit_assignument_screen.dart</code></h3>
+      <p>課題の名前・科目・締切を編集する画面です。ファイル名の<code>assignument</code>は現状の実ファイル名で、一般的な綴り<code>assignment</code>とは異なります。</p>
+      <p><code>EditAssignmentScreen</code>は編集対象の課題を受け取ります。<code>_EditAssignmentScreenState</code>は<code>initState()</code>で既存値を入力欄に設定し、<code>dispose()</code>でTextEditingControllerを解放します。保存すると課題を更新し、保存処理を依頼して、更新された課題を一覧画面に返します。</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>5. カレンダー予定のファイルとクラス</h2>
+    <article class="file">
+      <h3><code>lib/screens/carender/schedule.dart</code></h3>
+      <p>カレンダー上の予定1件を表す<code>Schedule</code>クラスを定義します。予定名、開始日、終了日、色を保持し、終了日が開始日より前でないことをassertで確認します。フォルダー名<code>carender</code>は現在のプロジェクト上の綴りです。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/carender/calender_screen.dart</code></h3>
+      <p><code>table_calendar</code>を利用して月間カレンダーと選択日の予定一覧を表示します。</p>
+      <ul>
+        <li><code>CalendarScreen</code> / <code>_CalendarScreenState</code>：表示中の月、選択日、予定一覧を管理します。</li>
+        <li><code>_eventsForDay()</code>：日付の時刻部分を除いて比較し、その日が予定の開始日から終了日までに含まれる予定を返します。開始日と終了日も含みます。</li>
+        <li><code>_addSchedule()</code>：予定追加画面を開き、戻り値を受け取ったら現在のリストに加えます。</li>
+      </ul>
+      <p><strong>保存範囲：</strong>予定リスト<code>schedules</code>はこの画面State内だけにあります。SharedPreferencesなどへの保存処理がないため、この画面を破棄したりアプリを再起動したりすると、登録した予定は保持されません。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/carender/add_schedule_screen.dart</code></h3>
+      <p>予定名・開始日・終了日・色を入力する画面です。</p>
+      <ul>
+        <li><code>AddScheduleScreen</code>：カレンダー側で選択されていた日付を<code>initialDate</code>として受け取ります。</li>
+        <li><code>_AddScheduleScreenState</code>：入力コントローラー、日付、選択色を管理します。</li>
+        <li><code>_selectStartDate()</code> / <code>_selectEndDate()</code>：日付選択ダイアログを開きます。開始日が後ろへ動いた場合、終了日が前にならないよう補正します。</li>
+        <li><code>_formatDate()</code>：日付を「年/月/日」形式で表示します。</li>
+        <li><code>_colorBox()</code>：色選択ボタンを描画し、選択中の色に枠線を付けます。</li>
+      </ul>
+      <p>予定名の前後の空白を除き、空欄でなければ<code>Schedule</code>を作ってカレンダーへ返します。入力コントローラーは画面終了時に破棄します。</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>6. 出席管理・メモ・設定</h2>
+    <article class="file">
+      <h3><code>lib/screens/otherscreen/attendance_data.dart</code></h3>
+      <p>出席状態の種類、授業ごとの記録、集計値、端末保存をまとめます。</p>
+      <ul>
+        <li><code>AttendanceStatus</code>：出席（present）、欠席（absent）、遅刻（late）、公欠（excused）の4状態を定義します。</li>
+        <li><code>AttendanceStatusLabel</code>：各状態を画面用の日本語ラベルへ変換するextensionです。</li>
+        <li><code>AttendanceStorage</code>：SharedPreferencesの<code>attendance_data</code>キーに記録をJSON保存します。</li>
+        <li><code>attendedCount</code>：出席状態（present）の記録数を返します。</li>
+        <li><code>countedCount</code>：公欠以外の記録数を返します。公欠は出席率の分母に入りません。</li>
+        <li><code>attendanceRate</code>：分母が0ならnull、そうでなければ出席数÷対象記録数を返します。</li>
+        <li><code>statusFor()</code>：日付と授業に対応する現在の状態を返します。</li>
+        <li><code>setStatus()</code>：状態を設定・削除し、更新内容を端末に保存します。</li>
+        <li><code>_recordKey()</code>：日付、授業名、先生、教室、開始時刻を組み合わせたキーを作ります。</li>
+      </ul>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/otherscreen/attendance_screen.dart</code></h3>
+      <p>授業ごとの出席状況を日付単位で登録する画面です。</p>
+      <ul>
+        <li><code>AttendanceScreen</code> / <code>_AttendanceScreenState</code>：選択日、読み込み中か、読み込みエラーを管理します。</li>
+        <li><code>initState()</code> / <code>_loadAttendance()</code>：画面開始時に記録を読み込み、失敗時は再試行可能な案内を表示します。</li>
+        <li><code>_changeStatus()</code>：選択した授業の状態を保存します。保存に失敗した場合はメッセージを表示します。</li>
+        <li><code>_selectDate()</code>：今日以前の日付を選ぶ日付ピッカーを開きます。</li>
+        <li><code>_weekday()</code>：選択日の曜日を日本語1文字に変換します。</li>
+      </ul>
+      <p>画面は選択日と同じ曜日の時間割を表示します。各授業で出席・欠席・遅刻・公欠を選択でき、既存記録を取り消せます。日付は今日より未来へ進められません。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/otherscreen/memoscreen.dart</code></h3>
+      <p><code>MemoScreen</code>は「メモ」という見出しと「メモ画面」という案内を表示します。メモの入力・一覧・保存機能は現時点では実装されていません。</p>
+    </article>
+    <article class="file">
+      <h3><code>lib/screens/class_otherscreen.dart</code></h3>
+      <p>メインナビゲーションの「設定」タブから表示する簡易画面です。現在は設定項目を持たず、プレースホルダー表示のみです。</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>7. プロジェクト設定・テスト</h2>
+    <article class="file">
+      <h3><code>pubspec.yaml</code> と <code>pubspec.lock</code></h3>
+      <p><code>pubspec.yaml</code>はアプリ名、Dart SDK条件、パッケージ依存関係を定義します。主な依存関係はFlutter本体、Flutterの日本語対応、<code>shared_preferences</code>（端末内保存）、<code>table_calendar</code>（カレンダーUI）、<code>intl</code>（日付・ロケール関連）です。<code>flutter_test</code>と<code>flutter_lints</code>はテストと静的解析向けです。</p>
+      <p><code>pubspec.lock</code>は実際に解決されたパッケージのバージョンを記録し、環境間で依存関係が大きく変わらないようにします。</p>
+    </article>
+    <article class="file">
+      <h3><code>analysis_options.yaml</code></h3>
+      <p>Dart静的解析の設定です。<code>flutter_lints</code>が提供する推奨ルールを有効にしています。解析は型や潜在的な誤り、コードスタイルなどを検出します。</p>
+    </article>
+    <article class="file">
+      <h3><code>test/widget_test.dart</code></h3>
+      <p>Flutter Widget Testのサンプルです。現在のテストは、アプリを表示して「0」「1」を探すカウンターアプリ用の内容ですが、実アプリは時間割アプリであり、その画面にカウンターはありません。現在のアプリ仕様を検証するテストへ書き換える必要があります。</p>
+    </article>
+    <article class="file">
+      <h3><code>README.md</code></h3>
+      <p>現状は新規Flutterプロジェクト向けの標準的な案内です。アプリ固有の機能、起動方法、データ保存、テストについての説明はほとんどありません。</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>8. 用語集と保守上の注意点</h2>
+    <table>
+      <thead><tr><th>用語</th><th>意味</th></tr></thead>
+      <tbody>
+        <tr><td>Widget</td><td>Flutter画面を構成する部品。テキスト、ボタン、一覧、画面全体などを表します。</td></tr>
+        <tr><td>State</td><td>画面表示中に変化する値を保持する仕組み。例：選択タブ、選択日。</td></tr>
+        <tr><td><code>setState()</code></td><td>Stateの値が変わったことをFlutterに知らせ、画面を再描画させます。</td></tr>
+        <tr><td>Navigator</td><td>画面を開いたり閉じたりする仕組み。画面を閉じるときに入力結果を戻り値として渡せます。</td></tr>
+        <tr><td>Future / async / await</td><td>端末読み込み・保存など時間のかかる非同期処理を表し、完了を待つ仕組みです。</td></tr>
+        <tr><td>JSON</td><td>データを文字列として表す形式。アプリのオブジェクトを端末保存向けに変換する際に使います。</td></tr>
+        <tr><td>SharedPreferences</td><td>小規模なキー・値データを端末内に保存する仕組み。アプリを閉じた後もデータを残せます。</td></tr>
+        <tr><td>Controller</td><td>TextFieldの入力内容を読み書きするオブジェクト。不要になったら<code>dispose()</code>で解放します。</td></tr>
+      </tbody>
+    </table>
+    <h3>現在の実装を理解する際の注意</h3>
+    <ol>
+      <li><strong>課題の締切：</strong>入力文字列をそのまま保存します。ホームの今日判定は<code>YYYY-MM-DD</code>との完全一致、週判定は日付として解析できることが条件です。</li>
+      <li><strong>今週の課題表示：</strong>ホームには課題名の一覧ではなく、提出済み件数／対象件数とパーセントが表示されます。</li>
+      <li><strong>カレンダー予定：</strong>予定は画面State内にしかなく、端末保存されていません。</li>
+      <li><strong>授業時間の入力：</strong>追加・編集画面は時間を数値に変換します。例のように時と分をコロンで区切る形式が必要です。入力形式が不正な場合の包括的な入力検証はありません。</li>
+      <li><strong>メモと設定：</strong>どちらも現状はプレースホルダーで、実データを扱う機能はまだありません。</li>
+      <li><strong>テスト：</strong>同梱のWidget Testは初期テンプレートのカウンター用で、現在の主要機能を検証していません。</li>
+      <li><strong>端末内データ：</strong>SharedPreferencesはローカル保存です。アプリのデータ消去・アンインストール・端末変更に備えるクラウド同期やバックアップ機能は見当たりません。</li>
+    </ol>
+    <div class="note">
+      <strong>変更時の考え方：</strong>画面だけを変更する場合でも、登録・編集・削除の結果が一覧と保存データに反映されるか確認します。データ項目を追加・変更する場合は、Model、JSON変換、Storageの読み書き、表示画面、テストを一緒に確認します。
+    </div>
+  </section>
+
+  <footer class="small" style="margin-top: 3em; padding-top: 1em; border-top: 1px solid var(--line);">
+    アプリのファイル・機能 詳細ガイド｜対象ソースの確認日：2026年10月26日
+  </footer>
+</body>
+</html>

@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'add_class_screen.dart';
@@ -19,11 +18,11 @@ class _ClassScreenState extends State<ClassScreen> {
   Future<void> _saveLessons() async {
     try {
       await LessonStorage.save();
-    } on FirebaseException catch (error) {
+    } on Exception catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Firebaseへの保存に失敗しました: ${error.message ?? error.code}'),
+          content: Text('端末への保存に失敗しました: $error'),
           action: SnackBarAction(label: '再試行', onPressed: _saveLessons),
         ),
       );

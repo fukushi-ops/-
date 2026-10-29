@@ -7,7 +7,6 @@
 | ファイル | 役割 |
 |---|---|
 | [`main.dart`](main.dart) | アプリの起動処理。授業・課題データを読み込んでから、最初に表示するホーム画面を設定する。 |
-| [`firebase_options.dart`](firebase_options.dart) | FlutterFire CLI が生成した Firebase のプラットフォーム別設定。 |
 
 ## 画面
 

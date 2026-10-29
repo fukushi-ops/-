@@ -18,15 +18,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
   // カレンダーで現在表示している月の日付です。
   DateTime _focusedDay = DateTime.now();
 
-  // 選択中の日付です。まだ選択されていない場合は null になります。
+  // 選択中の日付です。まだ選択されていない場合は null になります。？はnull許容型を意味します。
   DateTime? _selectedDay = DateUtils.dateOnly(DateTime.now());
+
+  CalendarFormat _calendarFormat = CalendarFormat.month;
 
   // 指定した日付に重なる予定を探して、カレンダーや一覧に渡します。
   List<Schedule> _eventsForDay(DateTime day) {
-    debugPrint('予定：${schedules.length}');
     // 時刻の違いで同じ日が別の日と判定されないよう、日付だけにそろえます。
     final date = DateUtils.dateOnly(day);
-    debugPrint('探したい日:$date');
 
     return schedules.where((schedule) {
       final start = DateUtils.dateOnly(schedule.startDate);
@@ -41,7 +41,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Future<void> _addSchedule() async {
     final result = await Navigator.push<Schedule>(
       context,
-      MaterialPageRoute(builder: (_) => const AddScheduleScreen()),
+      MaterialPageRoute(
+        builder: (_) =>
+            AddScheduleScreen(initialDate: _selectedDay ?? _focusedDay),
+      ),
     );
 
     // 入力画面で予定が保存されたときだけ、画面を更新します。
@@ -74,12 +77,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
             lastDay: DateTime(2100, 12, 31),
             focusedDay: _focusedDay,
             locale: 'ja_JP',
-            calendarFormat: CalendarFormat.month,
+            calendarFormat: _calendarFormat,
+            availableCalendarFormats: const {
+              CalendarFormat.month: '月',
+              CalendarFormat.twoWeeks: '2週間',
+              CalendarFormat.week: '週',
+            },
+            onFormatChanged: (format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            },
+
             headerStyle: const HeaderStyle(
               titleCentered: true,
-              formatButtonVisible: false,
+              formatButtonVisible: true,
             ),
+            // 選択中の日付を強調表示するための条件を指定します。
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+            // 選択中の日付に重なる予定を返す関数を指定します。
             eventLoader: _eventsForDay,
             // 日付を選ぶと、選択日と表示中の日付を更新します。
             onDaySelected: (selectedDay, focusedDay) {
