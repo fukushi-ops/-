@@ -2,25 +2,45 @@ import 'package:flutter/material.dart';
 
 import 'schedule.dart';
 
+/// 予定名・期間・色を入力し、作成した予定を前の画面へ返す画面。
 class AddScheduleScreen extends StatefulWidget {
-  const AddScheduleScreen({super.key});
+  const AddScheduleScreen({super.key, required this.initialDate});
+
+  /// カレンダー画面で選ばれた日付。開始日と終了日の初期値に使う。
+  final DateTime initialDate;
 
   @override
   State<AddScheduleScreen> createState() => _AddScheduleScreenState();
 }
 
+/// 予定の入力値を管理し、画面表示や日付選択を行う。
 class _AddScheduleScreenState extends State<AddScheduleScreen> {
+  /// 入力された予定名を取得するためのコントローラー。
   final titleController = TextEditingController();
-  DateTime startDate = DateUtils.dateOnly(DateTime.now());
-  DateTime endDate = DateUtils.dateOnly(DateTime.now());
+
+  /// 予定の開始日と終了日。時刻は切り捨て、日付だけを保持する。
+  late DateTime startDate;
+  late DateTime endDate;
+
+  /// 選択中の予定の色。
   Color selectedColor = Colors.blue;
 
   @override
+  void initState() {
+    super.initState();
+    // 前の画面で選ばれた日を、開始日と終了日の初期値にする。
+    startDate = DateUtils.dateOnly(widget.initialDate);
+    endDate = startDate;
+  }
+
+  @override
   void dispose() {
+    // 画面を閉じるときに入力コントローラーを解放する。
     titleController.dispose();
     super.dispose();
   }
 
+  /// 日付選択ダイアログを開き、選ばれた日を開始日に設定する。
   Future<void> _selectStartDate() async {
     final selected = await showDatePicker(
       context: context,
@@ -33,12 +53,14 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
 
     setState(() {
       startDate = DateUtils.dateOnly(selected);
+      // 終了日が開始日より前にならないよう、必要なら同じ日に合わせる。
       if (endDate.isBefore(startDate)) {
         endDate = startDate;
       }
     });
   }
 
+  /// 開始日以降の日付を選び、予定の終了日に設定する。
   Future<void> _selectEndDate() async {
     final selected = await showDatePicker(
       context: context,
@@ -54,12 +76,14 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
     });
   }
 
+  /// 日付を画面表示用の「年/月/日」形式にする。
   String _formatDate(DateTime date) {
     return '${date.year}年${date.month}月${date.day}日';
   }
 
   @override
   Widget build(BuildContext context) {
+    // 予定名・開始日・終了日・色を入力する画面を組み立てる。
     return Scaffold(
       appBar: AppBar(title: const Text('予定を追加')),
       body: Padding(
@@ -105,6 +129,7 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
                     return;
                   }
 
+                  // 入力内容を予定データにまとめ、前の画面へ返す。
                   Navigator.pop(
                     context,
                     Schedule(
@@ -124,6 +149,7 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
     );
   }
 
+  /// 色を選ぶボタンを作り、選択中の色には枠線を表示する。
   Widget _colorBox(Color color) {
     return GestureDetector(
       onTap: () => setState(() => selectedColor = color),
