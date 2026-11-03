@@ -74,7 +74,7 @@ class _AppStartupState extends State<_AppStartup> {
           );
         }
 
-        return const MainScreen(userName: '結菜さん');
+        return const MainScreen(userName: '福士さん');
       },
     );
   }
