@@ -21,12 +21,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final formattedDate = "${now.month}月${now.day}日（${_weekday(now.weekday)}）";
     final today = _weekday(now.weekday);
-    final todayKey =
-        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-
-    final todayTasks = TaskData.tasks
-        .where((task) => task.deadline == todayKey && !task.isDone)
-        .toList();
+    final todayTasks = TaskData.tasks.where((task) {
+      final deadline = DateTime.tryParse(task.deadline.trim());
+      return !task.isDone &&
+          deadline != null &&
+          deadline.year == now.year &&
+          deadline.month == now.month &&
+          deadline.day == now.day;
+    }).toList();
 
     final weekStart = DateTime(
       now.year,
@@ -36,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final weekEnd = weekStart.add(const Duration(days: 7));
 
     final weeklyTasks = TaskData.tasks.where((task) {
-      final deadline = DateTime.tryParse(task.deadline);
+      final deadline = DateTime.tryParse(task.deadline.trim());
 
       return deadline != null &&
           !deadline.isBefore(weekStart) &&
