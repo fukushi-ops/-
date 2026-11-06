@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 part 'isar_models.g.dart';
 
@@ -22,14 +22,17 @@ class CourseEntity {
 @collection
 class LessonEntity {
   Id id = Isar.autoIncrement;
+
   @Index()
   late int courseId;
-
+  @Index()
   late String weekday;
+
   late String teacher;
   late String room;
   late String time;
-  late String startTime;
+
+  late int startTime;
 }
 
 @collection

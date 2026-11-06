@@ -5,6 +5,7 @@ import 'screens/class/lesson_data.dart';
 import 'screens/otherscreen/attendance_data.dart';
 import 'screens/task/task_data.dart';
 import 'screens/main_screen.dart';
+import 'data/isar_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,7 @@ void main() async {
 }
 
 Future<void> _initializeApp() async {
+  await IsarService.open();
   await initializeDateFormatting('ja_JP');
   await LessonStorage.load();
   await TaskStorage.load();
