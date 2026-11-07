@@ -1,0 +1,100 @@
+import 'package:isar_community/isar.dart';
+
+import '../screens/task/task_data.dart';
+import 'data_main/isar_models.dart';
+import 'data_main/isar_service.dart';
+
+class TaskRepository {
+  static Future<List<Task>> load({required int termId}) async {
+    final isar = IsarService.instance;
+    final entities = await isar.taskEntitys
+        .filter()
+        .termIdEqualTo(termId)
+        .findAll();
+
+    return entities
+        .map(
+          (entity) => Task(
+            id: entity.id,
+            title: entity.title,
+            subject: entity.subject,
+            deadline: entity.deadline,
+            isDone: entity.isDone,
+          ),
+        )
+        .toList();
+  }
+
+  static Future<Task> add({required int termId, required Task task}) async {
+    final isar = IsarService.instance;
+    final entity = TaskEntity()
+      ..termId = termId
+      ..title = task.title
+      ..subject = task.subject
+      ..deadline = task.deadline
+      ..isDone = task.isDone;
+    await isar.writeTxn(() async {
+      await isar.taskEntitys.put(entity);
+    });
+    return Task(
+      id: entity.id,
+      title: entity.title,
+      subject: entity.subject,
+      deadline: entity.deadline,
+      isDone: entity.isDone,
+    );
+  }
+
+  static Future<void> update(Task task) async {
+    final id = task.id;
+    if (id == null) {
+      throw StateError('更新対象の課題IDがありません。');
+    }
+    final isar = IsarService.instance;
+    await isar.writeTxn(() async {
+      final entity = await isar.taskEntitys.get(id);
+      if (entity == null) {
+        throw StateError('更新対象の課題が見つかりません。');
+      }
+      entity
+        ..title = task.title
+        ..subject = task.subject
+        ..deadline = task.deadline
+        ..isDone = task.isDone;
+      await isar.taskEntitys.put(entity);
+    });
+  }
+
+  static Future<void> delete(Task task) async {
+    final id = task.id;
+    if (id == null) {
+      throw StateError("削除対象の課題のIDがありません。");
+    }
+    final isar = IsarService.instance;
+    await isar.writeTxn(() async {
+      final deleted = await isar.taskEntitys.delete(id);
+      if (!deleted) {
+        throw StateError("削除対象の課題が見つかりません。");
+      }
+    });
+  }
+
+  static Future<void> updateIsDone({
+    required Task task,
+    required bool isDone,
+  }) async {
+    final id = task.id;
+    if (id == null) {
+      throw StateError("更新対象の課題IDがありません。");
+    }
+    final isar = IsarService.instance;
+    await isar.writeTxn(() async {
+      final entity = await isar.taskEntitys.get(id);
+      if (entity == null) {
+        throw StateError("更新対象の課題が見つかりせｎ。");
+      }
+      entity.isDone = isDone;
+      await isar.taskEntitys.put(entity);
+    });
+  }
+}

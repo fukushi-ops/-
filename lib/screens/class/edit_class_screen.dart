@@ -78,7 +78,9 @@ class _EditClassScreenState extends State<EditClassScreen> {
                   teacher: teacherController.text,
                   room: roomController.text,
                   time: timeController.text,
-                  startTime: parseStartTime(timeController.text), // ★ これが必須！
+                  startTime: parseStartTime(timeController.text),
+                  courseId: widget.lesson.courseId,
+                  lessonId: widget.lesson.lessonId,
                 );
 
                 Navigator.pop(context, editedLesson);

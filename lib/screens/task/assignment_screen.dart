@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'add_assignment_screen.dart';
 import 'task_data.dart'; // ★ TaskData / TaskStorage を使う
 import 'edit_assignument_screen.dart'; // ★ 課題編集画面を使う
+import '../../data/task_repository.dart';
+import '../../data/lesson_repository.dart';
 
 class AssignmentScreen extends StatefulWidget {
   const AssignmentScreen({super.key});
@@ -62,11 +64,23 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
                         // 左にスワイプすると、この課題を削除する。
+                        confirmDismiss: (_) async {
+                          try {
+                            await TaskRepository.delete(task);
+                            return true;
+                          } catch (error) {
+                            if (!mounted) return false;
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('課題の削除に失敗しました。$error')),
+                            );
+                            return false;
+                          }
+                        },
                         onDismissed: (_) {
                           setState(() {
                             TaskData.tasks.remove(task);
                           });
-                          TaskStorage.save(); // ★ 削除したら保存
                         },
                         child: ListTile(
                           title: Text(task.title),
@@ -80,20 +94,46 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                               ),
                             );
                             if (!mounted || editedTask == null) return;
-                            setState(() {
-                              task.title = editedTask.title;
-                              task.subject = editedTask.subject;
-                              task.deadline = editedTask.deadline;
-                            });
-                            await TaskStorage.save();
+                            try {
+                              await TaskRepository.update(editedTask);
+                              if (!mounted) return;
+
+                              setState(() {
+                                final index = TaskData.tasks.indexOf(task);
+                                if (index != -1) {
+                                  TaskData.tasks[index] = editedTask;
+                                }
+                              });
+                            } catch (error) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("課題の更新に失敗しました：$error")),
+                              );
+                            }
                           },
                           trailing: Checkbox(
                             value: task.isDone,
-                            onChanged: (value) {
-                              setState(() {
-                                task.isDone = value!;
-                              });
-                              TaskStorage.save(); // ★ 完了状態変更も保存
+                            onChanged: (value) async {
+                              if (value == null) return;
+
+                              try {
+                                await TaskRepository.updateIsDone(
+                                  task: task,
+                                  isDone: value,
+                                );
+                                if (!mounted) return;
+
+                                setState(() {
+                                  task.isDone = value;
+                                });
+                              } catch (error) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('完了状態の更新に失敗しました。$error'),
+                                  ),
+                                );
+                              }
                             },
                           ),
                         ),
@@ -104,24 +144,36 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         ],
       ),
 
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text("課題を追加"),
         onPressed: () async {
-          final result = await Navigator.push(
+          final result = await Navigator.push<Task>(
             context,
             MaterialPageRoute(builder: (_) => const AddAssignmentScreen()),
           );
 
-          if (result != null) {
-            setState(() {
-              TaskData.tasks.add(result);
-            });
+          if (result == null) return;
 
-            TaskStorage.save(); // ★ 保存
+          try {
+            final savedTask = await TaskRepository.add(
+              termId: LessonRepository.activeTermId,
+              task: result,
+            );
+            if (!mounted) return;
+
+            setState(() {
+              TaskData.tasks.add(savedTask);
+            });
+          } catch (error) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('タスクの追加に失敗しました。$error')));
           }
         },
-        child: const Icon(Icons.add),
       ),
     );
   }

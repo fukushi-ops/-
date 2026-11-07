@@ -1,6 +1,4 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:my_app/data/attendance_repository.dart';
 
 import '../class/lesson_data.dart';
 
@@ -22,7 +20,6 @@ extension AttendanceStatusLabel on AttendanceStatus {
 }
 
 class AttendanceStorage {
-  static const String key = 'attendance_data';
   static Map<String, AttendanceStatus> _statuses = {};
 
   static int get attendedCount => _statuses.values
@@ -41,19 +38,14 @@ class AttendanceStorage {
   }
 
   static Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString(key);
+    final records = await AttendanceRepository.load();
 
-    if (jsonString == null) {
-      _statuses = {};
-      return;
-    }
-
-    final decoded = Map<String, dynamic>.from(jsonDecode(jsonString) as Map);
-    _statuses = decoded.map(
-      (recordKey, value) =>
-          MapEntry(recordKey, AttendanceStatus.values.byName(value as String)),
-    );
+    _statuses = {
+      for (final record in records)
+        '${record.date}:${record.lessonId}': AttendanceStatus.values.byName(
+          record.status,
+        ),
+    };
   }
 
   static Future<void> setStatus(
@@ -61,29 +53,28 @@ class AttendanceStorage {
     Lesson lesson,
     AttendanceStatus? status,
   ) async {
-    final recordKey = _recordKey(date, lesson);
+    final key = _recordKey(date, lesson);
+
     if (status == null) {
-      _statuses.remove(recordKey);
+      _statuses.remove(key);
     } else {
-      _statuses[recordKey] = status;
+      _statuses[key] = status;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final jsonMap = _statuses.map(
-      (recordKey, value) => MapEntry(recordKey, value.name),
+    await AttendanceRepository.setStatus(
+      date: date,
+      lesson: lesson,
+      status: status?.name,
     );
-    await prefs.setString(key, jsonEncode(jsonMap));
   }
 
   static String _recordKey(DateTime date, Lesson lesson) {
+    final lessonId = lesson.lessonId;
+    if (lessonId == null) {
+      throw StateError('授業のIDがないため出席状況を特定できません。');
+    }
     final dateKey =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    return jsonEncode([
-      dateKey,
-      lesson.name,
-      lesson.teacher,
-      lesson.room,
-      lesson.startTime,
-    ]);
+    return '$dateKey:$lessonId';
   }
 }

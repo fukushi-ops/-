@@ -1,85 +1,33 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
-
 class Lesson {
-  String name; // 授業名
-  String teacher; // 先生
-  String room; // 教室
-  String time; // 時間（例：9:00〜10:30）
-  int startTime; // 900 のように数値化した時間
-  //add_class_screenの返り値として、授業の内容をまとめた Lesson クラスを作る。
   Lesson({
     required this.name,
     required this.teacher,
     required this.room,
     required this.time,
     required this.startTime,
+    this.courseId,
+    this.lessonId,
   });
 
-  // ★ JSON に変換
-  Map<String, dynamic> toJson() {
-    return {
-      "name": name,
-      "teacher": teacher,
-      "room": room,
-      "time": time,
-      "startTime": startTime,
-    };
-  }
+  String name;
+  String teacher;
+  String room;
+  String time;
+  int startTime;
 
-  // ★ JSON から復元
-  factory Lesson.fromJson(Map<String, dynamic> json) {
-    return Lesson(
-      name: json["name"],
-      teacher: json["teacher"],
-      room: json["room"],
-      time: json["time"],
-      startTime: json["startTime"],
-    );
-  }
+  // ISAR上で編集・削除する授業を特定するID
+  int? courseId;
+  int? lessonId;
 }
 
 class LessonData {
-  static Map<String, List<Lesson>> lessonsByDay = {
-    "月": [],
-    "火": [],
-    "水": [],
-    "木": [],
-    "金": [],
-    "土": [],
-    "日": [],
+  static final Map<String, List<Lesson>> lessonsByDay = {
+    '月': [],
+    '火': [],
+    '水': [],
+    '木': [],
+    '金': [],
+    '土': [],
+    '日': [],
   };
-}
-
-class LessonStorage {
-  static const String key = "lesson_data";
-
-  static Future<void> save() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    final jsonMap = LessonData.lessonsByDay.map((day, list) {
-      return MapEntry(day, list.map((lesson) => lesson.toJson()).toList());
-    });
-
-    await prefs.setString(key, jsonEncode(jsonMap));
-  }
-
-  static Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString(key);
-
-    if (jsonString == null) return;
-
-    final decoded = jsonDecode(jsonString) as Map<String, dynamic>;
-    decoded.forEach((day, list) {
-      if (LessonData.lessonsByDay.containsKey(day)) {
-        LessonData.lessonsByDay[day] = (list as List<dynamic>)
-            .map(
-              (item) => Lesson.fromJson(Map<String, dynamic>.from(item as Map)),
-            )
-            .toList();
-      }
-    });
-  }
 }

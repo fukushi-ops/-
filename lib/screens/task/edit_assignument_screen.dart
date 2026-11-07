@@ -54,11 +54,14 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
             ElevatedButton(
               onPressed: () {
                 // 編集された課題を保存
-                widget.task.title = _titleController.text;
-                widget.task.subject = _subjectController.text;
-                widget.task.deadline = _deadlineController.text;
-                TaskStorage.save();
-                Navigator.pop(context, widget.task); // 編集された課題を返す
+                final editedTask = Task(
+                  id: widget.task.id,
+                  title: _titleController.text,
+                  subject: _subjectController.text,
+                  deadline: _deadlineController.text,
+                  isDone: widget.task.isDone,
+                );
+                Navigator.pop<Task>(context, editedTask);
               },
               child: const Text('保存'),
             ),

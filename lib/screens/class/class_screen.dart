@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'add_class_screen.dart';
 import 'edit_class_screen.dart';
 import 'lesson_data.dart';
+import '../../data/lesson_repository.dart';
 
 class ClassScreen extends StatefulWidget {
   const ClassScreen({super.key});
@@ -15,32 +16,24 @@ class _ClassScreenState extends State<ClassScreen> {
   static const _days = ["月", "火", "水", "木", "金", "土", "日"];
   String selectedDay = "月";
 
-  Future<void> _saveLessons() async {
-    try {
-      await LessonStorage.save();
-    } on Exception catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('端末への保存に失敗しました: $error'),
-          action: SnackBarAction(label: '再試行', onPressed: _saveLessons),
-        ),
-      );
-    }
-  }
-
   Future<void> _addLesson() async {
-    final result = await Navigator.push(
+    final result = await Navigator.push<Lesson>(
       context,
       MaterialPageRoute(builder: (_) => const AddClassScreen()),
     );
 
-    if (result != null) {
-      setState(() {
-        LessonData.lessonsByDay[selectedDay]!.add(result);
-      });
-      await _saveLessons();
-    }
+    if (result == null) return;
+
+    final saved = await LessonRepository.addLesson(
+      termId: LessonRepository.activeTermId,
+      weekday: selectedDay,
+      lesson: result,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      LessonData.lessonsByDay[selectedDay]!.add(saved);
+    });
   }
 
   @override
@@ -117,10 +110,26 @@ class _ClassScreenState extends State<ClassScreen> {
                           ),
                         ),
                         onDismissed: (_) async {
+                          final index = lessons.indexOf(lesson);
                           setState(() {
                             lessons.remove(lesson);
                           });
-                          await _saveLessons();
+
+                          try {
+                            await LessonRepository.deleteLesson(lesson: lesson);
+                          } on Exception catch (error) {
+                            if (!mounted) return;
+
+                            setState(() {
+                              lessons.insert(
+                                index.clamp(0, lessons.length).toInt(),
+                                lesson,
+                              );
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('授業の削除に失敗しました: $error')),
+                            );
+                          }
                         },
                         child: Card(
                           margin: const EdgeInsets.only(bottom: 12),
@@ -171,7 +180,7 @@ class _ClassScreenState extends State<ClassScreen> {
                             ),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () async {
-                              final result = await Navigator.push(
+                              final result = await Navigator.push<Lesson>(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) =>
@@ -180,13 +189,27 @@ class _ClassScreenState extends State<ClassScreen> {
                               );
 
                               if (result != null) {
-                                setState(() {
-                                  final lessonIndex = lessons.indexOf(lesson);
-                                  if (lessonIndex != -1) {
-                                    lessons[lessonIndex] = result;
-                                  }
-                                });
-                                await _saveLessons();
+                                try {
+                                  await LessonRepository.updateLesson(
+                                    weekday: selectedDay,
+                                    lesson: result,
+                                  );
+
+                                  if (!mounted) return;
+                                  setState(() {
+                                    final lessonIndex = lessons.indexOf(lesson);
+                                    if (lessonIndex != -1) {
+                                      lessons[lessonIndex] = result;
+                                    }
+                                  });
+                                } on Exception catch (error) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('授業の更新に失敗しました: $error'),
+                                    ),
+                                  );
+                                }
                               }
                             },
                           ),

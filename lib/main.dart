@@ -5,7 +5,9 @@ import 'screens/class/lesson_data.dart';
 import 'screens/otherscreen/attendance_data.dart';
 import 'screens/task/task_data.dart';
 import 'screens/main_screen.dart';
-import 'data/isar_service.dart';
+import 'data/data_main/isar_service.dart';
+import 'data/lesson_repository.dart';
+import 'data/task_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,8 +17,20 @@ void main() async {
 Future<void> _initializeApp() async {
   await IsarService.open();
   await initializeDateFormatting('ja_JP');
-  await LessonStorage.load();
-  await TaskStorage.load();
+
+  final now = DateTime.now();
+  final schoolYear = now.month >= 4 ? now.year : now.year - 1;
+  final termId = await LessonRepository.ensureTerm(
+    schoolYear: schoolYear,
+    termName: '通年',
+  );
+
+  final loadedeLessons = await LessonRepository.loadLessons(termId: termId);
+  for (final day in LessonData.lessonsByDay.keys) {
+    LessonData.lessonsByDay[day]!.clear();
+    LessonData.lessonsByDay[day]!.addAll(loadedeLessons[day]!);
+  }
+  TaskData.tasks = await TaskRepository.load(termId: termId);
   await AttendanceStorage.load();
 }
 
@@ -76,7 +90,7 @@ class _AppStartupState extends State<_AppStartup> {
           );
         }
 
-        return const MainScreen(userName: '福士さん');
+        return const MainScreen(userName: 'XXXさん');
       },
     );
   }

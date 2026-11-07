@@ -3,6 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import 'add_schedule_screen.dart';
 import 'schedule.dart';
+import '../../data/calendar_repository.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -14,6 +15,44 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   // 追加された予定を画面が表示されている間、ここに保存します。
   final List<Schedule> schedules = [];
+
+  bool _isLoading = true;
+  String? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSchedules(showLoading: false);
+  }
+
+  Future<void> _loadSchedules({bool showLoading = true}) async {
+    if (showLoading) {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+    }
+
+    try {
+      final loadedSchedules = await CalendarRepository.load();
+      if (!mounted) return;
+
+      setState(() {
+        schedules
+          ..clear()
+          ..addAll(loadedSchedules);
+        _isLoading = false;
+        _loadError = null;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _loadError = error.toString();
+      });
+    }
+  }
 
   // カレンダーで現在表示している月の日付です。
   DateTime _focusedDay = DateTime.now();
@@ -47,11 +86,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
     );
 
-    // 入力画面で予定が保存されたときだけ、画面を更新します。
-    if (result != null) {
+    if (result == null) return;
+
+    try {
+      final savedSchedule = await CalendarRepository.add(result);
+      if (!mounted) return;
+
       setState(() {
-        schedules.add(result);
+        schedules.add(savedSchedule);
       });
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('予定の保存に失敗しました: $error')));
     }
   }
 
@@ -114,7 +163,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
           const Divider(),
           // 選択した日の予定を表示し、予定がなければ案内文を表示します。
           Expanded(
-            child: selectedEvents.isEmpty
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _loadError != null
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('予定を読み込めませんでした。'),
+                        const SizedBox(height: 8),
+                        Text(_loadError!),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _loadSchedules,
+                          child: const Text('再試行'),
+                        ),
+                      ],
+                    ),
+                  )
+                : selectedEvents.isEmpty
                 ? const Center(child: Text('この日の予定はありません'))
                 : ListView.builder(
                     itemCount: selectedEvents.length,
