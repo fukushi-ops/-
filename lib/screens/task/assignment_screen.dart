@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'add_assignment_screen.dart';
 import 'task_data.dart'; // ★ TaskData / TaskStorage を使う
 import 'edit_assignument_screen.dart'; // ★ 課題編集画面を使う
-import '../../data/task_repository.dart';
-import '../../data/lesson_repository.dart';
+import '../../data/repository/task_repository.dart';
+import '../../data/repository/lesson_repository.dart';
 
 class AssignmentScreen extends StatefulWidget {
   const AssignmentScreen({super.key});

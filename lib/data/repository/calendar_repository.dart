@@ -1,9 +1,9 @@
 import 'package:isar_community/isar.dart';
 import 'package:flutter/material.dart';
 
-import '../screens/carender/schedule.dart';
-import 'data_main/isar_models.dart';
-import 'data_main/isar_service.dart';
+import '../../screens/carender/schedule.dart';
+import '../data_main/isar_models.dart';
+import '../data_main/isar_service.dart';
 
 class CalendarRepository {
   static Future<List<Schedule>> load() async {

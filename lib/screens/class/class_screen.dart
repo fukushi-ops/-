@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'add_class_screen.dart';
 import 'edit_class_screen.dart';
 import 'lesson_data.dart';
-import '../../data/lesson_repository.dart';
+import '../../data/repository/lesson_repository.dart';
 
 class ClassScreen extends StatefulWidget {
   const ClassScreen({super.key});

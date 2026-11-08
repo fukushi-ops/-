@@ -1,8 +1,8 @@
 import 'package:isar_community/isar.dart';
 
-import '../screens/class/lesson_data.dart';
-import 'data_main/isar_models.dart';
-import 'data_main/isar_service.dart';
+import '../../screens/class/lesson_data.dart';
+import '../data_main/isar_models.dart';
+import '../data_main/isar_service.dart';
 
 class AttendanceRepository {
   static Future<List<AttendanceEntity>> load() async {

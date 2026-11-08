@@ -1,4 +1,4 @@
-import 'package:my_app/data/attendance_repository.dart';
+import 'package:my_app/data/repository/attendance_repository.dart';
 
 import '../class/lesson_data.dart';
 

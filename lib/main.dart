@@ -6,8 +6,8 @@ import 'screens/otherscreen/attendance_data.dart';
 import 'screens/task/task_data.dart';
 import 'screens/main_screen.dart';
 import 'data/data_main/isar_service.dart';
-import 'data/lesson_repository.dart';
-import 'data/task_repository.dart';
+import 'data/repository/lesson_repository.dart';
+import 'data/repository/task_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

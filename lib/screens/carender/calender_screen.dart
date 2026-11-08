@@ -3,7 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import 'add_schedule_screen.dart';
 import 'schedule.dart';
-import '../../data/calendar_repository.dart';
+import '../../data/repository/calendar_repository.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -115,7 +115,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       appBar: AppBar(
         title: Text('${_focusedDay.year}年${_focusedDay.month}月カレンダー'),
         actions: [
-          IconButton(icon: const Icon(Icons.add), onPressed: _addSchedule),
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _isLoading ? null : _addSchedule,
+          ),
         ],
       ),
       body: Column(
