@@ -4,6 +4,7 @@ import 'task_data.dart'; // ★ TaskData / TaskStorage を使う
 import 'edit_assignument_screen.dart'; // ★ 課題編集画面を使う
 import '../../data/repository/task_repository.dart';
 import '../../data/repository/lesson_repository.dart';
+import 'task_detail_screen.dart';
 
 class AssignmentScreen extends StatefulWidget {
   const AssignmentScreen({super.key});
@@ -85,56 +86,79 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                         child: ListTile(
                           title: Text(task.title),
                           subtitle: Text("${task.subject} / ${task.deadline}"),
-                          onTap: () async {
-                            final editedTask = await Navigator.push<Task>(
+                          onTap: () {
+                            Navigator.push<void>(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    EditAssignmentScreen(task: task),
+                                builder: (_) => TaskDetailScreen(task: task),
                               ),
                             );
-                            if (!mounted || editedTask == null) return;
-                            try {
-                              await TaskRepository.update(editedTask);
-                              if (!mounted) return;
-
-                              setState(() {
-                                final index = TaskData.tasks.indexOf(task);
-                                if (index != -1) {
-                                  TaskData.tasks[index] = editedTask;
-                                }
-                              });
-                            } catch (error) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("課題の更新に失敗しました：$error")),
-                              );
-                            }
                           },
-                          trailing: Checkbox(
-                            value: task.isDone,
-                            onChanged: (value) async {
-                              if (value == null) return;
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                tooltip: '編集',
+                                onPressed: () async {
+                                  final editedTask = await Navigator.push<Task>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          EditAssignmentScreen(task: task),
+                                    ),
+                                  );
 
-                              try {
-                                await TaskRepository.updateIsDone(
-                                  task: task,
-                                  isDone: value,
-                                );
-                                if (!mounted) return;
+                                  if (!mounted || editedTask == null) return;
 
-                                setState(() {
-                                  task.isDone = value;
-                                });
-                              } catch (error) {
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('完了状態の更新に失敗しました。$error'),
-                                  ),
-                                );
-                              }
-                            },
+                                  try {
+                                    await TaskRepository.update(editedTask);
+                                    if (!mounted) return;
+
+                                    setState(() {
+                                      final taskIndex = TaskData.tasks.indexOf(
+                                        task,
+                                      );
+                                      if (taskIndex != -1) {
+                                        TaskData.tasks[taskIndex] = editedTask;
+                                      }
+                                    });
+                                  } catch (error) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('課題の更新に失敗しました：$error'),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                              Checkbox(
+                                value: task.isDone,
+                                onChanged: (value) async {
+                                  if (value == null) return;
+
+                                  try {
+                                    await TaskRepository.updateIsDone(
+                                      task: task,
+                                      isDone: value,
+                                    );
+                                    if (!mounted) return;
+
+                                    setState(() {
+                                      task.isDone = value;
+                                    });
+                                  } catch (error) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('完了状態の更新に失敗しました。$error'),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
                           ),
                         ),
                       );

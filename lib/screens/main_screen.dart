@@ -4,7 +4,6 @@ import 'class/class_screen.dart';
 import 'class_otherscreen.dart';
 import 'home_screen.dart';
 import 'task/assignment_screen.dart';
-import 'otherscreen/memoscreen.dart';
 
 class MainScreen extends StatefulWidget {
   final String userName;
@@ -24,7 +23,6 @@ class _MainScreenState extends State<MainScreen> {
       HomeScreen(userName: widget.userName),
       const ClassScreen(),
       const AssignmentScreen(),
-      const MemoScreen(),
       const OtherScreen(),
     ];
 
