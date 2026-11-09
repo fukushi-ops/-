@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'class/class_screen.dart';
-import 'class_otherscreen.dart';
 import 'home_screen.dart';
 import 'task/assignment_screen.dart';
 
@@ -23,7 +22,6 @@ class _MainScreenState extends State<MainScreen> {
       HomeScreen(userName: widget.userName),
       const ClassScreen(),
       const AssignmentScreen(),
-      const OtherScreen(),
     ];
 
     return Scaffold(
@@ -43,8 +41,6 @@ class _MainScreenState extends State<MainScreen> {
             label: '時間割',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.description), label: '課題'),
-          BottomNavigationBarItem(icon: Icon(Icons.sticky_note_2), label: 'メモ'),
-          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: '設定'),
         ],
       ),
     );
