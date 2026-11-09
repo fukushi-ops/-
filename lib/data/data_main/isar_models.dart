@@ -76,3 +76,15 @@ class CalendarEventEntity {
 
   late int colorValue;
 }
+
+@collection
+class TaskArtifactEntity {
+  Id id = Isar.autoIncrement;
+
+  @Index()
+  late int taskId;
+
+  late String name;
+  late String description;
+  late String location;
+}

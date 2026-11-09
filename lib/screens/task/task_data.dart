@@ -17,3 +17,15 @@ class Task {
 class TaskData {
   static List<Task> tasks = [];
 }
+
+class TaskArtifact {
+  const TaskArtifact({
+    required this.name,
+    required this.description,
+    required this.location,
+  });
+
+  final String name;
+  final String description;
+  final String location;
+}

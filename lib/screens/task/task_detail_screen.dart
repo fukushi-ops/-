@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/repository/task_repository.dart';
 import 'task_data.dart';
+import '../../data/repository/task_artifact_reposirotory.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   const TaskDetailScreen({super.key, required this.task});
@@ -102,6 +103,42 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
+  bool _isLoadingArtifact = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadArtifact();
+  }
+
+  Future<void> _loadArtifact() async {
+    final taskId = widget.task.id;
+
+    if (taskId == null) {
+      setState(() => _isLoadingArtifact = false);
+      return;
+    }
+
+    try {
+      final artifact = await TaskArtifactRepository.loadForTask(taskId: taskId);
+      if (!mounted) return;
+
+      setState(() {
+        _artifactName = artifact?.name;
+        _artifactDescription = artifact?.description;
+        _artifactLocation = artifact?.location;
+        _isLoadingArtifact = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() => _isLoadingArtifact = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('成果物の読み込みに失敗しました。$error')));
+    }
+  }
+
   Future<void> _toggleSubmissionStatus() async {
     final newStatus = !widget.task.isDone;
 
@@ -195,11 +232,39 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
       if (!mounted || result == null) return;
 
-      setState(() {
-        _artifactName = result.$1;
-        _artifactDescription = result.$2;
-        _artifactLocation = result.$3;
-      });
+      final taskId = widget.task.id;
+      if (taskId == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('課題IDがないため、成果物を保存できません。')));
+        return;
+      }
+
+      final artifact = TaskArtifact(
+        name: result.$1,
+        description: result.$2,
+        location: result.$3,
+      );
+
+      try {
+        await TaskArtifactRepository.saveForTask(
+          taskId: taskId,
+          artifact: artifact,
+        );
+        if (!mounted) return;
+
+        setState(() {
+          _artifactName = artifact.name;
+          _artifactDescription = artifact.description;
+          _artifactLocation = artifact.location;
+        });
+      } catch (error) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('成果物の保存に失敗しました。$error')));
+      }
     } finally {
       nameController.dispose();
       descriptionController.dispose();

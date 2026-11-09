@@ -17,6 +17,7 @@ class IsarService {
       CourseEntitySchema,
       LessonEntitySchema,
       TaskEntitySchema,
+      TaskArtifactEntitySchema,
       AttendanceEntitySchema,
       AppSettingsSchema,
       CalendarEventEntitySchema,
