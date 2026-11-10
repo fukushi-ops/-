@@ -76,6 +76,16 @@ class TaskRepository {
       if (!deleted) {
         throw StateError("削除対象の課題が見つかりません。");
       }
+
+      final artifacts = await isar.taskArtifactEntitys
+          .filter()
+          .taskIdEqualTo(id)
+          .findAll();
+      if (artifacts.isNotEmpty) {
+        await isar.taskArtifactEntitys.deleteAll(
+          artifacts.map((artifact) => artifact.id).toList(),
+        );
+      }
     });
   }
 
@@ -95,6 +105,23 @@ class TaskRepository {
       }
       entity.isDone = isDone;
       await isar.taskEntitys.put(entity);
+    });
+  }
+
+  static Future<void> deleteForTask({required int taskId}) async {
+    final isar = IsarService.instance;
+
+    await isar.writeTxn(() async {
+      final entities = await isar.taskArtifactEntitys
+          .filter()
+          .taskIdEqualTo(taskId)
+          .findAll();
+
+      if (entities.isNotEmpty) {
+        await isar.taskArtifactEntitys.deleteAll(
+          entities.map((entity) => entity.id).toList(),
+        );
+      }
     });
   }
 }

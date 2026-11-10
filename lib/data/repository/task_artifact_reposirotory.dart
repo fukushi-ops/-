@@ -45,4 +45,19 @@ class TaskArtifactRepository {
       await isar.taskArtifactEntitys.put(entity);
     });
   }
+
+  static Future<void> deleteForTask({required int taskId}) async {
+    final isar = IsarService.instance;
+
+    await isar.writeTxn(() async {
+      final entities = await isar.taskArtifactEntitys
+          .filter()
+          .taskIdEqualTo(taskId)
+          .findAll();
+
+      await isar.taskArtifactEntitys.deleteAll(
+        entities.map((entity) => entity.id).toList(),
+      );
+    });
+  }
 }

@@ -15,10 +15,14 @@ class TaskDetailScreen extends StatefulWidget {
 
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
   bool _isUpdatingStatus = false;
+  bool _isDeletingTask = false;
 
   String? _artifactName;
   String? _artifactDescription;
   String? _artifactLocation;
+  String? _artifactLoadError;
+  bool _isLoadingArtifact = true;
+  bool _isDeletingArtifact = false;
 
   @override
   Widget build(BuildContext context) {
@@ -78,32 +82,98 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           const SizedBox(height: 16),
           _buildSection(
             title: '成果物',
-            children: [
-              _DetailItem(label: '成果物名', value: _artifactName ?? '未登録'),
-              _DetailItem(label: '説明', value: _artifactDescription ?? '未登録'),
-              _DetailItem(label: '保存場所', value: _artifactLocation ?? '未登録'),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: _editArtifact,
-                  icon: Icon(_artifactName == null ? Icons.add : Icons.edit),
-                  label: Text(_artifactName == null ? '成果物を追加' : '編集'),
-                ),
-              ),
-            ],
+            children: _isLoadingArtifact
+                ? const [
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ]
+                : _artifactLoadError != null
+                ? [
+                    ListTile(
+                      title: const Text('成果物を読み込めませんでした'),
+                      subtitle: Text(_artifactLoadError!),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: _loadArtifact,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('再試行'),
+                      ),
+                    ),
+                  ]
+                : [
+                    if (_artifactName == null)
+                      _ArtifactEmptyState(
+                        onAdd: _isDeletingArtifact ? null : _editArtifact,
+                      )
+                    else ...[
+                      _ArtifactNameCard(name: _artifactName!),
+                      if ((_artifactDescription ?? '').isNotEmpty)
+                        _ArtifactDetailRow(
+                          icon: Icons.notes_outlined,
+                          label: '説明',
+                          value: _artifactDescription!,
+                        ),
+                      if ((_artifactLocation ?? '').isNotEmpty)
+                        _ArtifactDetailRow(
+                          icon: Icons.folder_open_outlined,
+                          label: '保存場所',
+                          value: _artifactLocation!,
+                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _isDeletingArtifact
+                                  ? null
+                                  : _deleteArtifact,
+                              icon: _isDeletingArtifact
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.delete_outline),
+                              label: const Text('削除'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: FilledButton.tonalIcon(
+                              onPressed: _isDeletingArtifact
+                                  ? null
+                                  : _editArtifact,
+                              icon: const Icon(Icons.edit_outlined),
+                              label: const Text('編集'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
           ),
           const SizedBox(height: 24),
           OutlinedButton.icon(
-            onPressed: null,
-            icon: const Icon(Icons.delete_outline),
-            label: const Text('課題を削除'),
+            onPressed: _isDeletingTask ? null : _deleteTask,
+            icon: _isDeletingTask
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.delete_outline),
+            label: Text(_isDeletingTask ? '削除中...' : '課題を削除'),
           ),
         ],
       ),
     );
   }
-
-  bool _isLoadingArtifact = true;
 
   @override
   void initState() {
@@ -112,10 +182,18 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Future<void> _loadArtifact() async {
+    setState(() {
+      _isLoadingArtifact = true;
+      _artifactLoadError = null;
+    });
+
     final taskId = widget.task.id;
 
     if (taskId == null) {
-      setState(() => _isLoadingArtifact = false);
+      setState(() {
+        _isLoadingArtifact = false;
+        _artifactLoadError = '課題IDがないため、成果物を読み込めません。';
+      });
       return;
     }
 
@@ -128,14 +206,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         _artifactDescription = artifact?.description;
         _artifactLocation = artifact?.location;
         _isLoadingArtifact = false;
+        _artifactLoadError = null;
       });
     } catch (error) {
       if (!mounted) return;
 
-      setState(() => _isLoadingArtifact = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('成果物の読み込みに失敗しました。$error')));
+      setState(() {
+        _isLoadingArtifact = false;
+        _artifactLoadError = error.toString();
+      });
     }
   }
 
@@ -165,6 +244,47 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('提出状況の更新に失敗しました。$error')));
+    }
+  }
+
+  Future<void> _deleteTask() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('課題を削除'),
+        content: Text('「${widget.task.title}」を削除しますか？登録済みの成果物も削除されます。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || shouldDelete != true) return;
+
+    setState(() {
+      _isDeletingTask = true;
+    });
+
+    try {
+      await TaskRepository.delete(widget.task);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _isDeletingTask = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('課題の削除に失敗しました。$error')));
     }
   }
 
@@ -272,26 +392,95 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
+  Future<void> _deleteArtifact() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('成果物を削除'),
+        content: const Text('この課題に登録した成果物情報を削除しますか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || shouldDelete != true) return;
+
+    final taskId = widget.task.id;
+    if (taskId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('課題IDがないため、成果物を削除できません。')));
+      return;
+    }
+
+    setState(() {
+      _isDeletingArtifact = true;
+    });
+
+    try {
+      await TaskArtifactRepository.deleteForTask(taskId: taskId);
+      if (!mounted) return;
+
+      setState(() {
+        _artifactName = null;
+        _artifactDescription = null;
+        _artifactLocation = null;
+        _isDeletingArtifact = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _isDeletingArtifact = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('成果物の削除に失敗しました。$error')));
+    }
+  }
+
   Widget _buildSection({
     required String title,
     required List<Widget> children,
   }) {
+    final icon = title == '成果物'
+        ? Icons.inventory_2_outlined
+        : Icons.assignment_outlined;
     return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+            Row(
+              children: [
+                Icon(icon, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 9),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+              ],
             ),
+            const SizedBox(height: 12),
             ...children,
           ],
         ),
@@ -327,5 +516,151 @@ class _DetailItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(dense: true, title: Text(label), subtitle: Text(value));
+  }
+}
+
+class _ArtifactEmptyState extends StatelessWidget {
+  const _ArtifactEmptyState({required this.onAdd});
+
+  final VoidCallback? onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.45,
+        ),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.inventory_2_outlined,
+            size: 38,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '成果物はまだ登録されていません',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '提出したファイルや保存場所を記録できます',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          ),
+          const SizedBox(height: 14),
+          FilledButton.tonalIcon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add),
+            label: const Text('成果物を登録'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArtifactNameCard extends StatelessWidget {
+  const _ArtifactNameCard({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primaryContainer,
+            theme.colorScheme.secondaryContainer,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.7),
+            child: Icon(
+              Icons.description_outlined,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '成果物名',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArtifactDetailRow extends StatelessWidget {
+  const _ArtifactDetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 19, color: theme.colorScheme.secondary),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 56,
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: SelectableText(value)),
+        ],
+      ),
+    );
   }
 }
