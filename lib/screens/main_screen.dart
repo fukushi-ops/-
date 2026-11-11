@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'class/class_screen.dart';
 import 'home_screen.dart';
 import 'task/assignment_screen.dart';
+import 'task/learning_history_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final String userName;
@@ -22,6 +23,7 @@ class _MainScreenState extends State<MainScreen> {
       HomeScreen(userName: widget.userName),
       const ClassScreen(),
       const AssignmentScreen(),
+      const LearningHistoryScreen(),
     ];
 
     return Scaffold(
@@ -41,6 +43,7 @@ class _MainScreenState extends State<MainScreen> {
             label: '時間割',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.description), label: '課題'),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: '分析'),
         ],
       ),
     );

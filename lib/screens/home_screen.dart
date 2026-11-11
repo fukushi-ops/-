@@ -5,6 +5,7 @@ import 'class/lesson_data.dart';
 import 'otherscreen/attendance_data.dart';
 import 'otherscreen/attendance_screen.dart';
 import 'task/task_data.dart';
+import '../services/simple_notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -76,7 +77,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () async {
+              await NotificationService.initialize();
+              await NotificationService.showTestNotification();
+            },
             icon: const Icon(Icons.notifications_none, color: Colors.black),
           ),
         ],

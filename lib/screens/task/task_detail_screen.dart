@@ -158,6 +158,54 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     ],
                   ],
           ),
+          const SizedBox(height: 16),
+          _buildSection(
+            title: '振り返り',
+            children: [
+              if (widget.task.reflectionScore == null &&
+                  (widget.task.reflectionDifficulty ?? '').isEmpty &&
+                  (widget.task.reflectionLearned ?? '').isEmpty &&
+                  (widget.task.reflectionGoodPoint ?? '').isEmpty &&
+                  (widget.task.reflectionImprovement ?? '').isEmpty)
+                _ReflectionEmptyState(onAdd: _editReflection)
+              else ...[
+                if (widget.task.reflectionScore != null)
+                  _DetailItem(
+                    label: '出来栄え',
+                    value: '${widget.task.reflectionScore} / 5',
+                  ),
+                if ((widget.task.reflectionDifficulty ?? '').isNotEmpty)
+                  _DetailItem(
+                    label: '難易度',
+                    value: widget.task.reflectionDifficulty!,
+                  ),
+                if ((widget.task.reflectionLearned ?? '').isNotEmpty)
+                  _DetailItem(
+                    label: '学んだこと',
+                    value: widget.task.reflectionLearned!,
+                  ),
+                if ((widget.task.reflectionGoodPoint ?? '').isNotEmpty)
+                  _DetailItem(
+                    label: 'うまくできたこと',
+                    value: widget.task.reflectionGoodPoint!,
+                  ),
+                if ((widget.task.reflectionImprovement ?? '').isNotEmpty)
+                  _DetailItem(
+                    label: '改善点',
+                    value: widget.task.reflectionImprovement!,
+                  ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    onPressed: _editReflection,
+                    icon: const Icon(Icons.edit_note_outlined),
+                    label: const Text('振り返りを編集'),
+                  ),
+                ),
+              ],
+            ],
+          ),
           const SizedBox(height: 24),
           OutlinedButton.icon(
             onPressed: _isDeletingTask ? null : _deleteTask,
@@ -447,6 +495,145 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
+  Future<void> _editReflection() async {
+    final difficultyController = TextEditingController(
+      text: widget.task.reflectionDifficulty ?? '',
+    );
+    final learnedController = TextEditingController(
+      text: widget.task.reflectionLearned ?? '',
+    );
+    final goodPointController = TextEditingController(
+      text: widget.task.reflectionGoodPoint ?? '',
+    );
+    final improvementController = TextEditingController(
+      text: widget.task.reflectionImprovement ?? '',
+    );
+    int? scoreValue = widget.task.reflectionScore;
+
+    final formKey = GlobalKey<FormState>();
+
+    try {
+      final result = await showDialog<_ReflectionInput?>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('振り返りを記録'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<int>(
+                    initialValue: scoreValue,
+                    decoration: const InputDecoration(labelText: '出来栄え'),
+                    items: List.generate(5, (index) => index + 1)
+                        .map(
+                          (score) => DropdownMenuItem(
+                            value: score,
+                            child: Text('$score / 5'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => scoreValue = value,
+                    validator: (value) => value == null ? '出来栄えを選択してください' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: difficultyController,
+                    decoration: const InputDecoration(labelText: '難易度'),
+                    maxLines: 1,
+                  ),
+                  TextFormField(
+                    controller: learnedController,
+                    decoration: const InputDecoration(labelText: '学んだこと'),
+                    maxLines: 3,
+                  ),
+                  TextFormField(
+                    controller: goodPointController,
+                    decoration: const InputDecoration(labelText: 'うまくできたこと'),
+                    maxLines: 3,
+                  ),
+                  TextFormField(
+                    controller: improvementController,
+                    decoration: const InputDecoration(labelText: '改善点'),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('キャンセル'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (scoreValue == null || scoreValue! < 1 || scoreValue! > 5) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text('出来栄えは1〜5の数字を選択してください。')),
+                  );
+                  return;
+                }
+                if (!formKey.currentState!.validate()) return;
+                Navigator.pop(
+                  dialogContext,
+                  _ReflectionInput(
+                    score: scoreValue!,
+                    difficulty: difficultyController.text.trim(),
+                    learned: learnedController.text.trim(),
+                    goodPoint: goodPointController.text.trim(),
+                    improvement: improvementController.text.trim(),
+                  ),
+                );
+              },
+              child: const Text('保存'),
+            ),
+          ],
+        ),
+      );
+
+      if (!mounted || result == null) return;
+
+      final updatedTask = Task(
+        id: widget.task.id,
+        title: widget.task.title,
+        subject: widget.task.subject,
+        deadline: widget.task.deadline,
+        isDone: widget.task.isDone,
+        reflectionScore: result.score,
+        reflectionDifficulty: result.difficulty,
+        reflectionLearned: result.learned,
+        reflectionGoodPoint: result.goodPoint,
+        reflectionImprovement: result.improvement,
+      );
+
+      try {
+        await TaskRepository.update(updatedTask);
+        if (!mounted) return;
+
+        setState(() {
+          widget.task.reflectionScore = result.score;
+          widget.task.reflectionDifficulty = result.difficulty;
+          widget.task.reflectionLearned = result.learned;
+          widget.task.reflectionGoodPoint = result.goodPoint;
+          widget.task.reflectionImprovement = result.improvement;
+        });
+        TaskData.notifyChanged();
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('振り返りの保存に失敗しました。$error')));
+      }
+    } finally {
+      difficultyController.dispose();
+      learnedController.dispose();
+      goodPointController.dispose();
+      improvementController.dispose();
+    }
+  }
+
   Widget _buildSection({
     required String title,
     required List<Widget> children,
@@ -504,6 +691,69 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       return '今日が締切';
     }
     return 'あと$daysUntilDeadline日';
+  }
+}
+
+class _ReflectionInput {
+  const _ReflectionInput({
+    required this.score,
+    required this.difficulty,
+    required this.learned,
+    required this.goodPoint,
+    required this.improvement,
+  });
+
+  final int score;
+  final String difficulty;
+  final String learned;
+  final String goodPoint;
+  final String improvement;
+}
+
+class _ReflectionEmptyState extends StatelessWidget {
+  const _ReflectionEmptyState({required this.onAdd});
+
+  final VoidCallback? onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.edit_note_outlined,
+            size: 38,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '振り返りはまだ記録されていません',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '出来栄えや学んだこと、改善点を残しましょう',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          ),
+          const SizedBox(height: 14),
+          FilledButton.tonalIcon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add),
+            label: const Text('振り返りを追加'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

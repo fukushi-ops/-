@@ -8,9 +8,12 @@ import 'screens/main_screen.dart';
 import 'data/data_main/isar_service.dart';
 import 'data/repository/lesson_repository.dart';
 import 'data/repository/task_repository.dart';
+import 'services/simple_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService.initialize();
   runApp(const MyApp());
 }
 
@@ -31,6 +34,7 @@ Future<void> _initializeApp() async {
     LessonData.lessonsByDay[day]!.addAll(loadedeLessons[day]!);
   }
   TaskData.tasks = await TaskRepository.load(termId: termId);
+  TaskData.notifyChanged();
   await AttendanceStorage.load();
 }
 

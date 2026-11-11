@@ -2659,9 +2659,34 @@ const TaskEntitySchema = CollectionSchema(
       type: IsarType.string,
     ),
     r'isDone': PropertySchema(id: 1, name: r'isDone', type: IsarType.bool),
-    r'subject': PropertySchema(id: 2, name: r'subject', type: IsarType.string),
-    r'termId': PropertySchema(id: 3, name: r'termId', type: IsarType.long),
-    r'title': PropertySchema(id: 4, name: r'title', type: IsarType.string),
+    r'reflectionDifficulty': PropertySchema(
+      id: 2,
+      name: r'reflectionDifficulty',
+      type: IsarType.string,
+    ),
+    r'reflectionGoodPoint': PropertySchema(
+      id: 3,
+      name: r'reflectionGoodPoint',
+      type: IsarType.string,
+    ),
+    r'reflectionImprovement': PropertySchema(
+      id: 4,
+      name: r'reflectionImprovement',
+      type: IsarType.string,
+    ),
+    r'reflectionLearned': PropertySchema(
+      id: 5,
+      name: r'reflectionLearned',
+      type: IsarType.string,
+    ),
+    r'reflectionScore': PropertySchema(
+      id: 6,
+      name: r'reflectionScore',
+      type: IsarType.long,
+    ),
+    r'subject': PropertySchema(id: 7, name: r'subject', type: IsarType.string),
+    r'termId': PropertySchema(id: 8, name: r'termId', type: IsarType.long),
+    r'title': PropertySchema(id: 9, name: r'title', type: IsarType.string),
   },
 
   estimateSize: _taskEntityEstimateSize,
@@ -2700,6 +2725,30 @@ int _taskEntityEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.deadline.length * 3;
+  {
+    final value = object.reflectionDifficulty;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.reflectionGoodPoint;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.reflectionImprovement;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.reflectionLearned;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.subject.length * 3;
   bytesCount += 3 + object.title.length * 3;
   return bytesCount;
@@ -2713,9 +2762,14 @@ void _taskEntitySerialize(
 ) {
   writer.writeString(offsets[0], object.deadline);
   writer.writeBool(offsets[1], object.isDone);
-  writer.writeString(offsets[2], object.subject);
-  writer.writeLong(offsets[3], object.termId);
-  writer.writeString(offsets[4], object.title);
+  writer.writeString(offsets[2], object.reflectionDifficulty);
+  writer.writeString(offsets[3], object.reflectionGoodPoint);
+  writer.writeString(offsets[4], object.reflectionImprovement);
+  writer.writeString(offsets[5], object.reflectionLearned);
+  writer.writeLong(offsets[6], object.reflectionScore);
+  writer.writeString(offsets[7], object.subject);
+  writer.writeLong(offsets[8], object.termId);
+  writer.writeString(offsets[9], object.title);
 }
 
 TaskEntity _taskEntityDeserialize(
@@ -2728,9 +2782,14 @@ TaskEntity _taskEntityDeserialize(
   object.deadline = reader.readString(offsets[0]);
   object.id = id;
   object.isDone = reader.readBool(offsets[1]);
-  object.subject = reader.readString(offsets[2]);
-  object.termId = reader.readLong(offsets[3]);
-  object.title = reader.readString(offsets[4]);
+  object.reflectionDifficulty = reader.readStringOrNull(offsets[2]);
+  object.reflectionGoodPoint = reader.readStringOrNull(offsets[3]);
+  object.reflectionImprovement = reader.readStringOrNull(offsets[4]);
+  object.reflectionLearned = reader.readStringOrNull(offsets[5]);
+  object.reflectionScore = reader.readLongOrNull(offsets[6]);
+  object.subject = reader.readString(offsets[7]);
+  object.termId = reader.readLong(offsets[8]);
+  object.title = reader.readString(offsets[9]);
   return object;
 }
 
@@ -2746,10 +2805,20 @@ P _taskEntityDeserializeProp<P>(
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
+      return (reader.readStringOrNull(offset)) as P;
+    case 5:
+      return (reader.readStringOrNull(offset)) as P;
+    case 6:
+      return (reader.readLongOrNull(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3179,6 +3248,724 @@ extension TaskEntityQueryFilter
     });
   }
 
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'reflectionDifficulty'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'reflectionDifficulty'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'reflectionDifficulty',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'reflectionDifficulty',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'reflectionDifficulty',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'reflectionDifficulty',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'reflectionDifficulty',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'reflectionDifficulty',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'reflectionDifficulty',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'reflectionDifficulty',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'reflectionDifficulty', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionDifficultyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'reflectionDifficulty',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'reflectionGoodPoint'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'reflectionGoodPoint'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'reflectionGoodPoint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'reflectionGoodPoint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'reflectionGoodPoint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'reflectionGoodPoint',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'reflectionGoodPoint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'reflectionGoodPoint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'reflectionGoodPoint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'reflectionGoodPoint',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'reflectionGoodPoint', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionGoodPointIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'reflectionGoodPoint',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'reflectionImprovement'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'reflectionImprovement'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'reflectionImprovement',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'reflectionImprovement',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'reflectionImprovement',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'reflectionImprovement',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'reflectionImprovement',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'reflectionImprovement',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'reflectionImprovement',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'reflectionImprovement',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'reflectionImprovement', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionImprovementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'reflectionImprovement',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'reflectionLearned'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'reflectionLearned'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'reflectionLearned',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'reflectionLearned',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'reflectionLearned',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'reflectionLearned',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'reflectionLearned',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'reflectionLearned',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'reflectionLearned',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'reflectionLearned',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'reflectionLearned', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionLearnedIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'reflectionLearned', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionScoreIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'reflectionScore'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionScoreIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'reflectionScore'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionScoreEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'reflectionScore', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionScoreGreaterThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'reflectionScore',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionScoreLessThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'reflectionScore',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  reflectionScoreBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'reflectionScore',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition> subjectEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -3566,6 +4353,74 @@ extension TaskEntityQuerySortBy
     });
   }
 
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByReflectionDifficulty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionDifficulty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByReflectionDifficultyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionDifficulty', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByReflectionGoodPoint() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionGoodPoint', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByReflectionGoodPointDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionGoodPoint', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByReflectionImprovement() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionImprovement', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByReflectionImprovementDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionImprovement', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy> sortByReflectionLearned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionLearned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByReflectionLearnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionLearned', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy> sortByReflectionScore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionScore', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByReflectionScoreDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionScore', Sort.desc);
+    });
+  }
+
   QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy> sortBySubject() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'subject', Sort.asc);
@@ -3641,6 +4496,74 @@ extension TaskEntityQuerySortThenBy
     });
   }
 
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByReflectionDifficulty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionDifficulty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByReflectionDifficultyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionDifficulty', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByReflectionGoodPoint() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionGoodPoint', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByReflectionGoodPointDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionGoodPoint', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByReflectionImprovement() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionImprovement', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByReflectionImprovementDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionImprovement', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy> thenByReflectionLearned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionLearned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByReflectionLearnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionLearned', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy> thenByReflectionScore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionScore', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByReflectionScoreDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reflectionScore', Sort.desc);
+    });
+  }
+
   QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy> thenBySubject() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'subject', Sort.asc);
@@ -3694,6 +4617,53 @@ extension TaskEntityQueryWhereDistinct
     });
   }
 
+  QueryBuilder<TaskEntity, TaskEntity, QDistinct>
+  distinctByReflectionDifficulty({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'reflectionDifficulty',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QDistinct>
+  distinctByReflectionGoodPoint({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'reflectionGoodPoint',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QDistinct>
+  distinctByReflectionImprovement({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'reflectionImprovement',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QDistinct> distinctByReflectionLearned({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'reflectionLearned',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QDistinct> distinctByReflectionScore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'reflectionScore');
+    });
+  }
+
   QueryBuilder<TaskEntity, TaskEntity, QDistinct> distinctBySubject({
     bool caseSensitive = true,
   }) {
@@ -3734,6 +4704,40 @@ extension TaskEntityQueryProperty
   QueryBuilder<TaskEntity, bool, QQueryOperations> isDoneProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isDone');
+    });
+  }
+
+  QueryBuilder<TaskEntity, String?, QQueryOperations>
+  reflectionDifficultyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reflectionDifficulty');
+    });
+  }
+
+  QueryBuilder<TaskEntity, String?, QQueryOperations>
+  reflectionGoodPointProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reflectionGoodPoint');
+    });
+  }
+
+  QueryBuilder<TaskEntity, String?, QQueryOperations>
+  reflectionImprovementProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reflectionImprovement');
+    });
+  }
+
+  QueryBuilder<TaskEntity, String?, QQueryOperations>
+  reflectionLearnedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reflectionLearned');
+    });
+  }
+
+  QueryBuilder<TaskEntity, int?, QQueryOperations> reflectionScoreProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reflectionScore');
     });
   }
 

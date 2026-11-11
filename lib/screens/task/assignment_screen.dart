@@ -391,7 +391,10 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         task: result,
       );
       if (!mounted) return;
-      setState(() => TaskData.tasks.add(savedTask));
+      setState(() {
+        TaskData.tasks.add(savedTask);
+        TaskData.notifyChanged();
+      });
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -413,6 +416,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       setState(() {
         final index = TaskData.tasks.indexOf(task);
         if (index != -1) TaskData.tasks[index] = editedTask;
+        TaskData.notifyChanged();
       });
     } catch (error) {
       if (!mounted) return;
@@ -428,14 +432,20 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
     );
     if (deleted != true || !mounted) return;
-    setState(() => TaskData.tasks.remove(task));
+    setState(() {
+      TaskData.tasks.remove(task);
+      TaskData.notifyChanged();
+    });
   }
 
   Future<void> _updateStatus(Task task, bool isDone) async {
     try {
       await TaskRepository.updateIsDone(task: task, isDone: isDone);
       if (!mounted) return;
-      setState(() => task.isDone = isDone);
+      setState(() {
+        task.isDone = isDone;
+        TaskData.notifyChanged();
+      });
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(

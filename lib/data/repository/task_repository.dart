@@ -20,6 +20,11 @@ class TaskRepository {
             subject: entity.subject,
             deadline: entity.deadline,
             isDone: entity.isDone,
+            reflectionScore: entity.reflectionScore,
+            reflectionDifficulty: entity.reflectionDifficulty,
+            reflectionLearned: entity.reflectionLearned,
+            reflectionGoodPoint: entity.reflectionGoodPoint,
+            reflectionImprovement: entity.reflectionImprovement,
           ),
         )
         .toList();
@@ -32,7 +37,12 @@ class TaskRepository {
       ..title = task.title
       ..subject = task.subject
       ..deadline = task.deadline
-      ..isDone = task.isDone;
+      ..isDone = task.isDone
+      ..reflectionScore = task.reflectionScore
+      ..reflectionDifficulty = task.reflectionDifficulty
+      ..reflectionLearned = task.reflectionLearned
+      ..reflectionGoodPoint = task.reflectionGoodPoint
+      ..reflectionImprovement = task.reflectionImprovement;
     await isar.writeTxn(() async {
       await isar.taskEntitys.put(entity);
     });
@@ -42,6 +52,11 @@ class TaskRepository {
       subject: entity.subject,
       deadline: entity.deadline,
       isDone: entity.isDone,
+      reflectionScore: entity.reflectionScore,
+      reflectionDifficulty: entity.reflectionDifficulty,
+      reflectionLearned: entity.reflectionLearned,
+      reflectionGoodPoint: entity.reflectionGoodPoint,
+      reflectionImprovement: entity.reflectionImprovement,
     );
   }
 
@@ -60,7 +75,12 @@ class TaskRepository {
         ..title = task.title
         ..subject = task.subject
         ..deadline = task.deadline
-        ..isDone = task.isDone;
+        ..isDone = task.isDone
+        ..reflectionScore = task.reflectionScore
+        ..reflectionDifficulty = task.reflectionDifficulty
+        ..reflectionLearned = task.reflectionLearned
+        ..reflectionGoodPoint = task.reflectionGoodPoint
+        ..reflectionImprovement = task.reflectionImprovement;
       await isar.taskEntitys.put(entity);
     });
   }

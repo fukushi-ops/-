@@ -45,6 +45,12 @@ class TaskEntity {
   late String subject;
   late String deadline;
   bool isDone = false;
+
+  int? reflectionScore;
+  String? reflectionDifficulty;
+  String? reflectionLearned;
+  String? reflectionGoodPoint;
+  String? reflectionImprovement;
 }
 
 @collection
