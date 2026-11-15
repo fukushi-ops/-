@@ -1,9 +1,14 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../data/repository/lesson_repository.dart';
 import 'add_class_screen.dart';
 import 'edit_class_screen.dart';
 import 'lesson_data.dart';
-import '../../data/repository/lesson_repository.dart';
+import 'timetable_import_review_screen.dart';
+import 'timetable_ocr_service.dart';
 
 class ClassScreen extends StatefulWidget {
   const ClassScreen({super.key});
@@ -15,6 +20,42 @@ class ClassScreen extends StatefulWidget {
 class _ClassScreenState extends State<ClassScreen> {
   static const _days = ["月", "火", "水", "木", "金", "土", "日"];
   String selectedDay = "月";
+
+  Future<void> _importTimetable() async {
+    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (image == null || !mounted) return;
+
+    try {
+      final recognized = await TimetableOcrService.recognize(image.path);
+      if (!mounted) return;
+      final lessons = await Navigator.push<List<LessonImport>>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TimetableImportReviewScreen(lessons: recognized),
+        ),
+      );
+      if (lessons == null || lessons.isEmpty || !mounted) return;
+
+      final saved = await LessonRepository.addLessons(
+        termId: LessonRepository.activeTermId,
+        lessons: lessons,
+      );
+      if (!mounted) return;
+      setState(() {
+        for (final item in saved) {
+          LessonData.lessonsByDay[item.weekday]!.add(item.lesson);
+        }
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${saved.length}件の授業を時間割に追加しました')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('時間割の画像取り込みに失敗しました: $error')));
+    }
+  }
 
   Future<void> _addLesson() async {
     final result = await Navigator.push<Lesson>(
@@ -43,7 +84,18 @@ class _ClassScreenState extends State<ClassScreen> {
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('授業一覧'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('授業一覧'),
+        centerTitle: true,
+        actions: [
+          if (Platform.isAndroid)
+            IconButton(
+              onPressed: _importTimetable,
+              tooltip: '画像から時間割を取り込む',
+              icon: const Icon(Icons.image_search_outlined),
+            ),
+        ],
+      ),
       body: Column(
         children: [
           SizedBox(
@@ -110,6 +162,7 @@ class _ClassScreenState extends State<ClassScreen> {
                           ),
                         ),
                         onDismissed: (_) async {
+                          final messenger = ScaffoldMessenger.of(context);
                           final index = lessons.indexOf(lesson);
                           setState(() {
                             lessons.remove(lesson);
@@ -118,7 +171,7 @@ class _ClassScreenState extends State<ClassScreen> {
                           try {
                             await LessonRepository.deleteLesson(lesson: lesson);
                           } on Exception catch (error) {
-                            if (!mounted) return;
+                            if (!messenger.mounted) return;
 
                             setState(() {
                               lessons.insert(
@@ -126,7 +179,7 @@ class _ClassScreenState extends State<ClassScreen> {
                                 lesson,
                               );
                             });
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               SnackBar(content: Text('授業の削除に失敗しました: $error')),
                             );
                           }
@@ -180,8 +233,9 @@ class _ClassScreenState extends State<ClassScreen> {
                             ),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () async {
-                              final result = await Navigator.push<Lesson>(
-                                context,
+                              final navigator = Navigator.of(context);
+                              final messenger = ScaffoldMessenger.of(context);
+                              final result = await navigator.push<Lesson>(
                                 MaterialPageRoute(
                                   builder: (_) =>
                                       EditClassScreen(lesson: lesson),
@@ -203,8 +257,8 @@ class _ClassScreenState extends State<ClassScreen> {
                                     }
                                   });
                                 } on Exception catch (error) {
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  if (!messenger.mounted) return;
+                                  messenger.showSnackBar(
                                     SnackBar(
                                       content: Text('授業の更新に失敗しました: $error'),
                                     ),

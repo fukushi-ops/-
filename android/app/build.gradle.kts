@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.my_app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -45,6 +45,7 @@ kotlin {
 }
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
 }
 
 flutter {

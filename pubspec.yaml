@@ -48,6 +48,8 @@ dependencies:
   isar_community: ^3.4.1
   isar_community_flutter_libs: ^3.4.1
   path_provider: ^2.1.6
+  image_picker: ^1.2.4
+  google_mlkit_text_recognition: 0.15.1
 
 dev_dependencies:
   flutter_test:

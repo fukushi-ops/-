@@ -131,6 +131,49 @@ class LessonRepository {
     );
   }
 
+  static Future<List<LessonImport>> addLessons({
+    required int termId,
+    required List<LessonImport> lessons,
+  }) async {
+    final isar = IsarService.instance;
+    final savedLessons = <LessonImport>[];
+
+    await isar.writeTxn(() async {
+      for (final item in lessons) {
+        final course = CourseEntity()
+          ..termId = termId
+          ..name = item.lesson.name;
+        await isar.courseEntitys.put(course);
+
+        final lessonEntity = LessonEntity()
+          ..courseId = course.id
+          ..weekday = item.weekday
+          ..teacher = item.lesson.teacher
+          ..room = item.lesson.room
+          ..time = item.lesson.time
+          ..startTime = item.lesson.startTime;
+        await isar.lessonEntitys.put(lessonEntity);
+
+        savedLessons.add(
+          LessonImport(
+            weekday: item.weekday,
+            lesson: Lesson(
+              name: item.lesson.name,
+              teacher: item.lesson.teacher,
+              room: item.lesson.room,
+              time: item.lesson.time,
+              startTime: item.lesson.startTime,
+              courseId: course.id,
+              lessonId: lessonEntity.id,
+            ),
+          ),
+        );
+      }
+    });
+
+    return savedLessons;
+  }
+
   static Future<void> updateLesson({
     required String weekday,
     required Lesson lesson,
