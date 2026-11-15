@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:isar_community/isar.dart';
 
 import '../../screens/task/task_data.dart';
@@ -20,6 +22,12 @@ class TaskRepository {
             subject: entity.subject,
             deadline: entity.deadline,
             isDone: entity.isDone,
+            priority: entity.priority >= 1 && entity.priority <= 3
+                ? entity.priority
+                : 2,
+            progress: entity.progress.clamp(0, 100),
+            workMemo: entity.workMemo,
+            checklist: _decodeChecklist(entity.checklistJson),
             reflectionScore: entity.reflectionScore,
             reflectionDifficulty: entity.reflectionDifficulty,
             reflectionLearned: entity.reflectionLearned,
@@ -38,6 +46,10 @@ class TaskRepository {
       ..subject = task.subject
       ..deadline = task.deadline
       ..isDone = task.isDone
+      ..priority = task.priority
+      ..progress = task.progress
+      ..workMemo = task.workMemo
+      ..checklistJson = _encodeChecklist(task.checklist)
       ..reflectionScore = task.reflectionScore
       ..reflectionDifficulty = task.reflectionDifficulty
       ..reflectionLearned = task.reflectionLearned
@@ -52,6 +64,10 @@ class TaskRepository {
       subject: entity.subject,
       deadline: entity.deadline,
       isDone: entity.isDone,
+      priority: entity.priority,
+      progress: entity.progress,
+      workMemo: entity.workMemo,
+      checklist: _decodeChecklist(entity.checklistJson),
       reflectionScore: entity.reflectionScore,
       reflectionDifficulty: entity.reflectionDifficulty,
       reflectionLearned: entity.reflectionLearned,
@@ -76,6 +92,10 @@ class TaskRepository {
         ..subject = task.subject
         ..deadline = task.deadline
         ..isDone = task.isDone
+        ..priority = task.priority
+        ..progress = task.progress
+        ..workMemo = task.workMemo
+        ..checklistJson = _encodeChecklist(task.checklist)
         ..reflectionScore = task.reflectionScore
         ..reflectionDifficulty = task.reflectionDifficulty
         ..reflectionLearned = task.reflectionLearned
@@ -83,6 +103,30 @@ class TaskRepository {
         ..reflectionImprovement = task.reflectionImprovement;
       await isar.taskEntitys.put(entity);
     });
+  }
+
+  static String _encodeChecklist(List<TaskChecklistItem> checklist) =>
+      jsonEncode(
+        checklist
+            .map((item) => {'title': item.title, 'isDone': item.isDone})
+            .toList(),
+      );
+
+  static List<TaskChecklistItem> _decodeChecklist(String encoded) {
+    if (encoded.isEmpty) return [];
+    final decoded = jsonDecode(encoded);
+    if (decoded is! List) {
+      throw const FormatException('課題のチェックリスト形式が正しくありません。');
+    }
+    return decoded.map((item) {
+      if (item is! Map || item['title'] is! String || item['isDone'] is! bool) {
+        throw const FormatException('課題のチェックリスト項目が正しくありません。');
+      }
+      return TaskChecklistItem(
+        title: item['title'] as String,
+        isDone: item['isDone'] as bool,
+      );
+    }).toList();
   }
 
   static Future<void> delete(Task task) async {

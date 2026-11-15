@@ -126,7 +126,8 @@ class _ClassScreenState extends State<ClassScreen> {
                                 lesson,
                               );
                             });
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            final messenger = ScaffoldMessenger.maybeOf(context);
+                            messenger?.showSnackBar(
                               SnackBar(content: Text('授業の削除に失敗しました: $error')),
                             );
                           }
@@ -204,7 +205,8 @@ class _ClassScreenState extends State<ClassScreen> {
                                   });
                                 } on Exception catch (error) {
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  final messenger = ScaffoldMessenger.maybeOf(context);
+                                  messenger?.showSnackBar(
                                     SnackBar(
                                       content: Text('授業の更新に失敗しました: $error'),
                                     ),
@@ -221,6 +223,7 @@ class _ClassScreenState extends State<ClassScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'addLessonFab',
         onPressed: _addLesson,
         child: const Icon(Icons.add),
       ),

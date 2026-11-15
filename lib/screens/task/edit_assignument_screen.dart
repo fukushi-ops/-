@@ -16,6 +16,7 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
   late final TextEditingController _titleController;
   late final TextEditingController _subjectController;
   late final TextEditingController _deadlineController;
+  late int _priority;
 
   @override
   void initState() {
@@ -23,6 +24,7 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
     _titleController = TextEditingController(text: widget.task.title);
     _subjectController = TextEditingController(text: widget.task.subject);
     _deadlineController = TextEditingController(text: widget.task.deadline);
+    _priority = widget.task.priority;
   }
 
   @override
@@ -162,6 +164,23 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
               },
             ),
             const SizedBox(height: 24),
+            DropdownButtonFormField<int>(
+              initialValue: _priority,
+              decoration: const InputDecoration(
+                labelText: '優先度',
+                prefixIcon: Icon(Icons.flag_outlined),
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 1, child: Text('高')),
+                DropdownMenuItem(value: 2, child: Text('中')),
+                DropdownMenuItem(value: 3, child: Text('低')),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _priority = value);
+              },
+            ),
+            const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -254,6 +273,15 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
         subject: _subjectController.text.trim(),
         deadline: _deadlineController.text.trim(),
         isDone: widget.task.isDone,
+        priority: _priority,
+        progress: widget.task.progress,
+        workMemo: widget.task.workMemo,
+        checklist: widget.task.checklist,
+        reflectionScore: widget.task.reflectionScore,
+        reflectionDifficulty: widget.task.reflectionDifficulty,
+        reflectionLearned: widget.task.reflectionLearned,
+        reflectionGoodPoint: widget.task.reflectionGoodPoint,
+        reflectionImprovement: widget.task.reflectionImprovement,
       ),
     );
   }

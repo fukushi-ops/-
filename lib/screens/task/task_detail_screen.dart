@@ -16,6 +16,8 @@ class TaskDetailScreen extends StatefulWidget {
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
   bool _isUpdatingStatus = false;
   bool _isDeletingTask = false;
+  bool _isSavingProgress = false;
+  double _draftProgress = 0;
 
   String? _artifactName;
   String? _artifactDescription;
@@ -79,6 +81,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          _buildProgressSection(context),
           const SizedBox(height: 16),
           _buildSection(
             title: '成果物',
@@ -226,7 +230,260 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _draftProgress = widget.task.progress.toDouble();
     _loadArtifact();
+  }
+
+  Widget _buildProgressSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final task = widget.task;
+    return _buildSection(
+      title: '進捗・作業メモ',
+      children: [
+        Row(
+          children: [
+            const Expanded(child: Text('優先度')),
+            DropdownButton<int>(
+              value: task.priority,
+              items: const [
+                DropdownMenuItem(value: 1, child: Text('高')),
+                DropdownMenuItem(value: 2, child: Text('中')),
+                DropdownMenuItem(value: 3, child: Text('低')),
+              ],
+              onChanged: _isSavingProgress
+                  ? null
+                  : (value) {
+                      if (value != null) {
+                        _saveTask(task.copyWith(priority: value));
+                      }
+                    },
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '進捗  ${task.isDone ? 100 : _draftProgress.round()}%',
+                style: theme.textTheme.titleSmall,
+              ),
+            ),
+            Text(
+              task.progressStatus,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        Slider(
+          value: task.isDone ? 100 : _draftProgress.clamp(0, 100),
+          min: 0,
+          max: 100,
+          divisions: 10,
+          label: '${_draftProgress.round()}%',
+          onChanged: task.isDone || _isSavingProgress
+              ? null
+              : (value) => setState(() => _draftProgress = value),
+          onChangeEnd: task.isDone
+              ? null
+              : (value) => _saveTask(task.copyWith(progress: value.round())),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '作業チェックリスト',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: '項目を追加',
+              onPressed: _isSavingProgress ? null : _addChecklistItem,
+              icon: const Icon(Icons.add),
+            ),
+          ],
+        ),
+        if (task.checklist.isEmpty)
+          Text(
+            '作業を分けて登録すると、進み具合を確認できます。',
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          )
+        else
+          ...task.checklist.indexed.map((entry) {
+            final index = entry.$1;
+            final item = entry.$2;
+            return CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              value: item.isDone,
+              title: Text(
+                item.title,
+                style: TextStyle(
+                  decoration: item.isDone ? TextDecoration.lineThrough : null,
+                ),
+              ),
+              secondary: IconButton(
+                tooltip: '項目を削除',
+                onPressed: _isSavingProgress
+                    ? null
+                    : () => _removeChecklistItem(index),
+                icon: const Icon(Icons.close),
+              ),
+              onChanged: _isSavingProgress
+                  ? null
+                  : (checked) {
+                      final checklist = List<TaskChecklistItem>.from(
+                        task.checklist,
+                      );
+                      checklist[index] = TaskChecklistItem(
+                        title: item.title,
+                        isDone: checked ?? false,
+                      );
+                      _saveTask(_taskWithChecklist(task, checklist));
+                    },
+            );
+          }),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _isSavingProgress ? null : _editWorkMemo,
+          icon: const Icon(Icons.edit_note),
+          label: Text(task.workMemo.isEmpty ? '作業メモを追加' : '作業メモを編集'),
+        ),
+        if (task.workMemo.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(task.workMemo),
+            ),
+          ),
+        if (_isSavingProgress)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: LinearProgressIndicator(),
+          ),
+      ],
+    );
+  }
+
+  void _showSnackBar(String message, [BuildContext? targetContext]) {
+    final effectiveContext = targetContext ?? context;
+    if (!mounted && targetContext == null) return;
+    final messenger = ScaffoldMessenger.maybeOf(effectiveContext);
+    if (messenger == null) return;
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _saveTask(Task updatedTask) async {
+    if (_isSavingProgress) return;
+    setState(() => _isSavingProgress = true);
+    try {
+      await TaskRepository.update(updatedTask);
+      if (!mounted) return;
+      setState(() {
+        widget.task
+          ..priority = updatedTask.priority
+          ..progress = updatedTask.progress
+          ..workMemo = updatedTask.workMemo
+          ..checklist = updatedTask.checklist;
+        _draftProgress = updatedTask.progress.toDouble();
+        _isSavingProgress = false;
+      });
+      TaskData.notifyChanged();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isSavingProgress = false);
+      _showSnackBar('進捗の保存に失敗しました: $error');
+    }
+  }
+
+  Future<void> _addChecklistItem() async {
+    final controller = TextEditingController();
+    try {
+      final title = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('チェック項目を追加'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: '例：資料を調べる'),
+            onSubmitted: (value) => Navigator.pop(dialogContext, value.trim()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('キャンセル'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, controller.text.trim()),
+              child: const Text('追加'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || title == null || title.isEmpty) return;
+      await _saveTask(
+        _taskWithChecklist(widget.task, [
+          ...widget.task.checklist,
+          TaskChecklistItem(title: title),
+        ]),
+      );
+    } finally {
+      controller.dispose();
+    }
+  }
+
+  Task _taskWithChecklist(Task task, List<TaskChecklistItem> checklist) {
+    final completedCount = checklist.where((item) => item.isDone).length;
+    final progress = checklist.isEmpty
+        ? 0
+        : (completedCount * 100 / checklist.length).round();
+    return task.copyWith(checklist: checklist, progress: progress);
+  }
+
+  Future<void> _removeChecklistItem(int index) async {
+    final checklist = List<TaskChecklistItem>.from(widget.task.checklist)
+      ..removeAt(index);
+    await _saveTask(_taskWithChecklist(widget.task, checklist));
+  }
+
+  Future<void> _editWorkMemo() async {
+    final controller = TextEditingController(text: widget.task.workMemo);
+    try {
+      final memo = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('作業メモ'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 5,
+            decoration: const InputDecoration(hintText: '作業内容や次にやること'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('キャンセル'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, controller.text.trim()),
+              child: const Text('保存'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || memo == null) return;
+      await _saveTask(widget.task.copyWith(workMemo: memo));
+    } finally {
+      controller.dispose();
+    }
   }
 
   Future<void> _loadArtifact() async {
@@ -289,9 +546,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         _isUpdatingStatus = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('提出状況の更新に失敗しました。$error')));
+      _showSnackBar('提出状況の更新に失敗しました。$error');
     }
   }
 
@@ -323,16 +578,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     try {
       await TaskRepository.delete(widget.task);
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      if (Navigator.maybeOf(context) != null) {
+        Navigator.of(context).pop(true);
+      }
     } catch (error) {
       if (!mounted) return;
 
       setState(() {
         _isDeletingTask = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('課題の削除に失敗しました。$error')));
+      _showSnackBar('課題の削除に失敗しました。$error');
     }
   }
 
@@ -402,9 +657,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
       final taskId = widget.task.id;
       if (taskId == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('課題IDがないため、成果物を保存できません。')));
+        _showSnackBar('課題IDがないため、成果物を保存できません。');
         return;
       }
 
@@ -429,9 +682,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       } catch (error) {
         if (!mounted) return;
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('成果物の保存に失敗しました。$error')));
+        _showSnackBar('成果物の保存に失敗しました。$error');
       }
     } finally {
       nameController.dispose();
@@ -463,9 +714,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
     final taskId = widget.task.id;
     if (taskId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('課題IDがないため、成果物を削除できません。')));
+      _showSnackBar('課題IDがないため、成果物を削除できません。');
       return;
     }
 
@@ -489,9 +738,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       setState(() {
         _isDeletingArtifact = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('成果物の削除に失敗しました。$error')));
+      _showSnackBar('成果物の削除に失敗しました。$error');
     }
   }
 
@@ -535,7 +782,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         )
                         .toList(),
                     onChanged: (value) => scoreValue = value,
-                    validator: (value) => value == null ? '出来栄えを選択してください' : null,
+                    validator: (value) =>
+                        value == null ? '出来栄えを選択してください' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -570,7 +818,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ElevatedButton(
               onPressed: () {
                 if (scoreValue == null || scoreValue! < 1 || scoreValue! > 5) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  final messenger = ScaffoldMessenger.maybeOf(dialogContext);
+                  messenger?.showSnackBar(
                     const SnackBar(content: Text('出来栄えは1〜5の数字を選択してください。')),
                   );
                   return;
@@ -595,12 +844,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
       if (!mounted || result == null) return;
 
-      final updatedTask = Task(
-        id: widget.task.id,
-        title: widget.task.title,
-        subject: widget.task.subject,
-        deadline: widget.task.deadline,
-        isDone: widget.task.isDone,
+      final updatedTask = widget.task.copyWith(
         reflectionScore: result.score,
         reflectionDifficulty: result.difficulty,
         reflectionLearned: result.learned,
@@ -622,9 +866,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         TaskData.notifyChanged();
       } catch (error) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('振り返りの保存に失敗しました。$error')));
+        _showSnackBar('振り返りの保存に失敗しました。$error');
       }
     } finally {
       difficultyController.dispose();
@@ -722,7 +964,9 @@ class _ReflectionEmptyState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.45,
+        ),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(

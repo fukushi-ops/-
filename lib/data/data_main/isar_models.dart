@@ -45,6 +45,10 @@ class TaskEntity {
   late String subject;
   late String deadline;
   bool isDone = false;
+  int priority = 2;
+  int progress = 0;
+  String workMemo = '';
+  String checklistJson = '[]';
 
   int? reflectionScore;
   String? reflectionDifficulty;

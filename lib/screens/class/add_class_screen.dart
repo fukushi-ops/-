@@ -66,7 +66,8 @@ class _AddClassScreenState extends State<AddClassScreen> {
                       teacherController.text.isEmpty ||
                       roomController.text.isEmpty ||
                       timeController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    final messenger = ScaffoldMessenger.maybeOf(context);
+                    messenger?.showSnackBar(
                       const SnackBar(content: Text("すべて入力してください")),
                     );
                     return;

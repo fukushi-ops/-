@@ -54,7 +54,8 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
                   if (titleController.text.isEmpty ||
                       subjectController.text.isEmpty ||
                       deadlineController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    final messenger = ScaffoldMessenger.maybeOf(context);
+                    messenger?.showSnackBar(
                       const SnackBar(content: Text("すべて入力してください")),
                     );
                     return;

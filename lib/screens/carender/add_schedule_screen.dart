@@ -123,7 +123,8 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
                 onPressed: () {
                   final title = titleController.text.trim();
                   if (title.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    final messenger = ScaffoldMessenger.maybeOf(context);
+                    messenger?.showSnackBar(
                       const SnackBar(content: Text('予定名を入力してください')),
                     );
                     return;

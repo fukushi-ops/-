@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'task_detail_screen.dart';
 import 'task_data.dart';
 
 class LearningHistoryScreen extends StatefulWidget {
@@ -57,11 +58,10 @@ class _LearningHistoryScreenState extends State<LearningHistoryScreen> {
     final averageScore = _averageScore(TaskData.tasks);
     final subjectStats = _buildSubjectStats().values.toList()
       ..sort((a, b) => b.totalCount.compareTo(a.totalCount));
+    final trendTasks = _scoredTasksByDeadline();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('学習履歴'),
-      ),
+      appBar: AppBar(title: const Text('学習履歴')),
       body: subjectStats.isEmpty
           ? const _EmptyState()
           : ListView(
@@ -73,30 +73,49 @@ class _LearningHistoryScreenState extends State<LearningHistoryScreen> {
                   averageScore: averageScore,
                 ),
                 const SizedBox(height: 18),
+                _SectionTitle(title: '自己評価の推移'),
+                const SizedBox(height: 4),
                 Text(
-                  '科目別集計',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  '課題の締切日順に表示しています。',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).hintColor,
                   ),
                 ),
+                const SizedBox(height: 12),
+                _ScoreTrendChart(tasks: trendTasks),
+                const SizedBox(height: 18),
+                _SectionTitle(title: '科目別集計'),
                 const SizedBox(height: 12),
                 ...subjectStats.map((stat) => _SubjectCard(stat: stat)),
                 const SizedBox(height: 18),
-                Text(
-                  '最近の課題',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                _SectionTitle(title: '課題履歴（${TaskData.tasks.length}件）'),
                 const SizedBox(height: 12),
-                ..._recentTasks().map((task) => _RecentTaskCard(task: task)),
+                ..._historyTasks().map(
+                  (task) =>
+                      _RecentTaskCard(task: task, onTap: () => _openTask(task)),
+                ),
               ],
             ),
     );
   }
 
+  Future<void> _openTask(Task task) async {
+    final deleted = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
+    );
+    if (!mounted) return;
+    if (deleted == true) {
+      TaskData.tasks.remove(task);
+      TaskData.notifyChanged();
+    }
+    setState(() {});
+  }
+
   double _averageScore(List<Task> tasks) {
-    final scoredTasks = tasks.where((task) => task.reflectionScore != null).toList();
+    final scoredTasks = tasks
+        .where((task) => task.reflectionScore != null)
+        .toList();
     if (scoredTasks.isEmpty) return 0;
 
     final total = scoredTasks.fold<int>(
@@ -106,7 +125,22 @@ class _LearningHistoryScreenState extends State<LearningHistoryScreen> {
     return total / scoredTasks.length;
   }
 
-  List<Task> _recentTasks() {
+  List<Task> _scoredTasksByDeadline() {
+    final tasks = TaskData.tasks
+        .where((task) => task.reflectionScore != null)
+        .toList();
+    tasks.sort((a, b) {
+      final aDate = DateTime.tryParse(a.deadline);
+      final bDate = DateTime.tryParse(b.deadline);
+      if (aDate == null && bDate == null) return 0;
+      if (aDate == null) return 1;
+      if (bDate == null) return -1;
+      return aDate.compareTo(bDate);
+    });
+    return tasks;
+  }
+
+  List<Task> _historyTasks() {
     final tasks = List<Task>.from(TaskData.tasks);
     tasks.sort((a, b) {
       final aDate = DateTime.tryParse(a.deadline);
@@ -116,7 +150,198 @@ class _LearningHistoryScreenState extends State<LearningHistoryScreen> {
       if (bDate == null) return -1;
       return bDate.compareTo(aDate);
     });
-    return tasks.take(5).toList();
+    return tasks;
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+    );
+  }
+}
+
+class _ScoreTrendChart extends StatelessWidget {
+  const _ScoreTrendChart({required this.tasks});
+
+  final List<Task> tasks;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    if (tasks.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.45,
+          ),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: const Text(
+          '自己評価を記録すると、ここに推移が表示されます。',
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    final chartWidth = (tasks.length * 64.0 + 44)
+        .clamp(320.0, double.infinity)
+        .toDouble();
+    final scores = tasks
+        .map((task) => task.reflectionScore!)
+        .toList(growable: false);
+    final labels = tasks
+        .map((task) {
+          final deadline = DateTime.tryParse(task.deadline);
+          return deadline == null
+              ? '日付なし'
+              : '${deadline.month}/${deadline.day}';
+        })
+        .toList(growable: false);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.25)),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: chartWidth,
+          height: 190,
+          child: CustomPaint(
+            painter: _ScoreTrendPainter(
+              scores: scores,
+              labels: labels,
+              lineColor: theme.colorScheme.primary,
+              gridColor: theme.dividerColor.withValues(alpha: 0.5),
+              labelColor: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ScoreTrendPainter extends CustomPainter {
+  _ScoreTrendPainter({
+    required this.scores,
+    required this.labels,
+    required this.lineColor,
+    required this.gridColor,
+    required this.labelColor,
+  });
+
+  final List<int> scores;
+  final List<String> labels;
+  final Color lineColor;
+  final Color gridColor;
+  final Color labelColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const left = 32.0;
+    const right = 12.0;
+    const top = 12.0;
+    const bottom = 32.0;
+    final chartWidth = size.width - left - right;
+    final chartHeight = size.height - top - bottom;
+
+    final gridPaint = Paint()
+      ..color = gridColor
+      ..strokeWidth = 1;
+    for (var score = 1; score <= 5; score++) {
+      final y = top + (5 - score) / 4 * chartHeight;
+      canvas.drawLine(
+        Offset(left, y),
+        Offset(size.width - right, y),
+        gridPaint,
+      );
+      _drawLabel(
+        canvas,
+        '$score',
+        Offset(0, y - 7),
+        maxWidth: left - 6,
+        alignment: TextAlign.right,
+      );
+    }
+
+    final points = <Offset>[];
+    for (var index = 0; index < scores.length; index++) {
+      final x = scores.length == 1
+          ? left + chartWidth / 2
+          : left + index / (scores.length - 1) * chartWidth;
+      final y = top + (5 - scores[index].clamp(1, 5)) / 4 * chartHeight;
+      points.add(Offset(x, y));
+    }
+
+    final linePaint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    if (points.length > 1) {
+      final path = Path()..moveTo(points.first.dx, points.first.dy);
+      for (final point in points.skip(1)) {
+        path.lineTo(point.dx, point.dy);
+      }
+      canvas.drawPath(path, linePaint);
+    }
+
+    final pointPaint = Paint()..color = lineColor;
+    for (var index = 0; index < points.length; index++) {
+      canvas.drawCircle(points[index], 5, pointPaint);
+      _drawLabel(
+        canvas,
+        labels[index],
+        Offset(points[index].dx - 24, size.height - bottom + 8),
+        maxWidth: 48,
+        alignment: TextAlign.center,
+      );
+    }
+  }
+
+  void _drawLabel(
+    Canvas canvas,
+    String text,
+    Offset offset, {
+    required double maxWidth,
+    required TextAlign alignment,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(color: labelColor, fontSize: 11),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: alignment,
+      maxLines: 1,
+      ellipsis: '…',
+    )..layout(maxWidth: maxWidth);
+    painter.paint(canvas, offset);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ScoreTrendPainter oldDelegate) {
+    return oldDelegate.scores != scores ||
+        oldDelegate.labels != labels ||
+        oldDelegate.lineColor != lineColor ||
+        oldDelegate.gridColor != gridColor ||
+        oldDelegate.labelColor != labelColor;
   }
 }
 
@@ -225,17 +450,14 @@ class _SubjectCard extends StatelessWidget {
     final maxCount = TaskData.tasks.isEmpty
         ? 1
         : TaskData.tasks
-            .map((task) => task.subject.trim())
-            .where((value) => value.isNotEmpty)
-            .fold<int>(
-              0,
-              (maxValue, subject) {
+              .map((task) => task.subject.trim())
+              .where((value) => value.isNotEmpty)
+              .fold<int>(0, (maxValue, subject) {
                 final count = TaskData.tasks
                     .where((task) => task.subject.trim() == subject)
                     .length;
                 return count > maxValue ? count : maxValue;
-              },
-            );
+              });
     final ratio = maxCount == 0 ? 0.0 : stat.totalCount / maxCount;
 
     return Container(
@@ -244,9 +466,7 @@ class _SubjectCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -284,10 +504,7 @@ class _SubjectCard extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(
-                '課題数: ${stat.totalCount}',
-                style: theme.textTheme.bodySmall,
-              ),
+              Text('課題数: ${stat.totalCount}', style: theme.textTheme.bodySmall),
               const Spacer(),
               Text(
                 '平均評価: ${stat.averageScore == 0 ? '未記録' : stat.averageScore.toStringAsFixed(1)}',
@@ -302,69 +519,75 @@ class _SubjectCard extends StatelessWidget {
 }
 
 class _RecentTaskCard extends StatelessWidget {
-  const _RecentTaskCard({required this.task});
+  const _RecentTaskCard({required this.task, required this.onTap});
 
   final Task task;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dueDate = DateTime.tryParse(task.deadline);
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+      elevation: 0,
+      color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.2),
-        ),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.2)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  task.title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      task.title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
+                  if (task.isDone)
+                    const Icon(Icons.check_circle, color: Colors.teal)
+                  else
+                    const Icon(Icons.schedule_outlined, color: Colors.orange),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                task.subject,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
                 ),
               ),
-              if (task.isDone)
-                const Icon(Icons.check_circle, color: Colors.teal)
-              else
-                const Icon(Icons.schedule_outlined, color: Colors.orange),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(Icons.event_outlined, size: 16, color: theme.hintColor),
+                  const SizedBox(width: 6),
+                  Text(dueDate == null ? task.deadline : '締切 ${task.deadline}'),
+                  const Spacer(),
+                  if (task.reflectionScore != null)
+                    Text(
+                      '評価 ${task.reflectionScore} / 5',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            task.subject,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.hintColor,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(Icons.event_outlined, size: 16, color: theme.hintColor),
-              const SizedBox(width: 6),
-              Text(dueDate == null ? task.deadline : '締切 ${task.deadline}'),
-              const Spacer(),
-              if (task.reflectionScore != null)
-                Text(
-                  '評価 ${task.reflectionScore} / 5',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

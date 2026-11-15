@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'carender/calender_screen.dart';
 import 'class/lesson_data.dart';
-import 'otherscreen/attendance_data.dart';
-import 'otherscreen/attendance_screen.dart';
 import 'task/task_data.dart';
 import '../services/simple_notification_service.dart';
 
@@ -53,7 +51,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final weeklyProgress = weeklyTasks.isEmpty
         ? 0.0
         : completedWeeklyTasks / weeklyTasks.length;
-    final attendanceRate = AttendanceStorage.attendanceRate;
 
     final lessons = List<Lesson>.from(
       LessonData.lessonsByDay[today] ?? const <Lesson>[],
@@ -393,82 +390,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // 出席率
-              GestureDetector(
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AttendanceScreen()),
-                  );
-                  if (!mounted) return;
-                  setState(() {});
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F3F4),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '出席率',
-                            style: TextStyle(
-                              color: Colors.deepPurple,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 18),
-                          Text(
-                            attendanceRate == null
-                                ? '出席状況を記録してください'
-                                : '${AttendanceStorage.attendedCount} / ${AttendanceStorage.countedCount}回出席',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        width: 65,
-                        height: 65,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              value: attendanceRate ?? 0,
-                              strokeWidth: 5,
-                              backgroundColor: Colors.white,
-                              valueColor: const AlwaysStoppedAnimation(
-                                Colors.deepPurple,
-                              ),
-                            ),
-                            Text(
-                              attendanceRate == null
-                                  ? '--%'
-                                  : '${(attendanceRate * 100).round()}%',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
 
