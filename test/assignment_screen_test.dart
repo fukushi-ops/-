@@ -77,6 +77,22 @@ void main() {
     expect(find.text('英語課題'), findsNothing);
   });
 
+  testWidgets('キーボード表示中に画面がオーバーフローしない', (tester) async {
+    tester.view.physicalSize = const Size(480, 800);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+
+    await tester.pumpWidget(const MaterialApp(home: AssignmentScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('課題を追加'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('キーワードと評価・難易度を組み合わせて検索できる', (tester) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1;

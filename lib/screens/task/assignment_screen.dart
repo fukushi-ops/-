@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/repository/lesson_repository.dart';
 import '../../data/repository/task_repository.dart';
+import '../../services/simple_notification_service.dart';
 import 'add_assignment_screen.dart';
 import 'edit_assignument_screen.dart';
 import 'task_data.dart';
@@ -159,184 +160,203 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
           ],
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _SummaryCard(
-                    label: 'すべて',
-                    value: '${TaskData.tasks.length}',
-                    icon: Icons.assignment_outlined,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _SummaryCard(
-                    label: '未提出',
-                    value: '$pendingCount',
-                    icon: Icons.schedule_outlined,
-                    color: Colors.deepOrange,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _SummaryCard(
-                    label: '提出済み',
-                    value: '$completedCount',
-                    icon: Icons.check_circle_outline,
-                    color: Colors.teal,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (_) => setState(() {}),
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: '課題名・科目・振り返りを検索',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchController.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: '検索をクリア',
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {});
-                              },
-                              icon: const Icon(Icons.clear),
-                            ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      isDense: true,
+      body: CustomScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _SummaryCard(
+                      label: 'すべて',
+                      value: '${TaskData.tasks.length}',
+                      icon: Icons.assignment_outlined,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: _openAdvancedFilters,
-                  icon: const Icon(Icons.tune),
-                  label: Text(
-                    _activeFilterCount == 0 ? '条件' : '条件 $_activeFilterCount',
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _SummaryCard(
+                      label: '未提出',
+                      value: '$pendingCount',
+                      icon: Icons.schedule_outlined,
+                      color: Colors.deepOrange,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 44,
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              children: [
-                _FilterChip(
-                  label: 'すべて',
-                  selected: _statusFilter == 0,
-                  onSelected: () => setState(() => _statusFilter = 0),
-                ),
-                _FilterChip(
-                  label: '未提出',
-                  selected: _statusFilter == 1,
-                  onSelected: () => setState(() => _statusFilter = 1),
-                ),
-                _FilterChip(
-                  label: '提出済み',
-                  selected: _statusFilter == 2,
-                  onSelected: () => setState(() => _statusFilter = 2),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 16, 8),
-            child: Row(
-              children: [
-                Icon(Icons.book_outlined, size: 18, color: theme.hintColor),
-                const SizedBox(width: 8),
-                Text(
-                  '教科で絞り込む',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _SummaryCard(
+                      label: '提出済み',
+                      value: '$completedCount',
+                      icon: Icons.check_circle_outline,
+                      color: Colors.teal,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          SizedBox(
-            height: 42,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: subjects.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final subject = subjects[index];
-                return _FilterChip(
-                  label: subject,
-                  selected: _subjectFilter == subject,
-                  onSelected: () => setState(() => _subjectFilter = subject),
-                  outlined: true,
-                );
-              },
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setState(() {}),
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: '課題名・科目・振り返りを検索',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchController.text.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: '検索をクリア',
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {});
+                                },
+                                icon: const Icon(Icons.clear),
+                              ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: _openAdvancedFilters,
+                    icon: const Icon(Icons.tune),
+                    label: Text(
+                      _activeFilterCount == 0 ? '条件' : '条件 $_activeFilterCount',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _subjectFilter == 'すべて' ? '課題一覧' : '$_subjectFilter の課題',
-                    style: theme.textTheme.titleMedium?.copyWith(
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 44,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _FilterChip(
+                    label: 'すべて',
+                    selected: _statusFilter == 0,
+                    onSelected: () => setState(() => _statusFilter = 0),
+                  ),
+                  _FilterChip(
+                    label: '未提出',
+                    selected: _statusFilter == 1,
+                    onSelected: () => setState(() => _statusFilter = 1),
+                  ),
+                  _FilterChip(
+                    label: '提出済み',
+                    selected: _statusFilter == 2,
+                    onSelected: () => setState(() => _statusFilter = 2),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 16, 8),
+              child: Row(
+                children: [
+                  Icon(Icons.book_outlined, size: 18, color: theme.hintColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    '教科で絞り込む',
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                Text(
-                  '${filteredTasks.length}件',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          Expanded(
-            child: filteredTasks.isEmpty
-                ? _EmptyAssignments(
-                    subjectFilter: _subjectFilter,
-                    statusFilter: _statusFilter,
-                    hasAdditionalFilters:
-                        _searchController.text.trim().isNotEmpty ||
-                        _activeFilterCount > 0,
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                    itemCount: filteredTasks.length,
-                    itemBuilder: (context, index) =>
-                        _buildTaskCard(context, filteredTasks[index]),
-                  ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 42,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                scrollDirection: Axis.horizontal,
+                itemCount: subjects.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final subject = subjects[index];
+                  return _FilterChip(
+                    label: subject,
+                    selected: _subjectFilter == subject,
+                    onSelected: () => setState(() => _subjectFilter = subject),
+                    outlined: true,
+                  );
+                },
+              ),
+            ),
           ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _subjectFilter == 'すべて' ? '課題一覧' : '$_subjectFilter の課題',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${filteredTasks.length}件',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (filteredTasks.isEmpty)
+            SliverToBoxAdapter(
+              child: _EmptyAssignments(
+                subjectFilter: _subjectFilter,
+                statusFilter: _statusFilter,
+                hasAdditionalFilters:
+                    _searchController.text.trim().isNotEmpty ||
+                    _activeFilterCount > 0,
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) =>
+                      _buildTaskCard(context, filteredTasks[index]),
+                  childCount: filteredTasks.length,
+                ),
+              ),
+            ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'addTaskFab',
-        onPressed: _addTask,
-        icon: const Icon(Icons.add),
-        label: const Text('課題を追加'),
-      ),
+      floatingActionButton: MediaQuery.viewInsetsOf(context).bottom > 0
+          ? null
+          : FloatingActionButton.extended(
+              heroTag: 'addTaskFab',
+              onPressed: _addTask,
+              icon: const Icon(Icons.add),
+              label: const Text('課題を追加'),
+            ),
     );
   }
 
@@ -494,6 +514,13 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         final messenger = ScaffoldMessenger.maybeOf(context);
         try {
           await TaskRepository.delete(task);
+          try {
+            await NotificationService.cancelTaskDeadlineNotifications(task);
+          } on Exception catch (error) {
+            messenger?.showSnackBar(
+              SnackBar(content: Text('課題は削除しましたが、締切通知の取消しに失敗しました。$error')),
+            );
+          }
           return true;
         } catch (error) {
           messenger?.showSnackBar(
@@ -677,6 +704,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         TaskData.tasks.add(savedTask);
         TaskData.notifyChanged();
       });
+      await _updateDeadlineReminder(savedTask);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -700,6 +728,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         if (index != -1) TaskData.tasks[index] = editedTask;
         TaskData.notifyChanged();
       });
+      await _updateDeadlineReminder(editedTask);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -728,11 +757,23 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         task.isDone = isDone;
         TaskData.notifyChanged();
       });
+      await _updateDeadlineReminder(task);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('提出状況の更新に失敗しました。$error')));
+    }
+  }
+
+  Future<void> _updateDeadlineReminder(Task task) async {
+    try {
+      await NotificationService.updateTaskDeadlineNotification(task);
+    } on Exception catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('課題は保存しましたが、締切通知の設定に失敗しました。$error')),
+      );
     }
   }
 }

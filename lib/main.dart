@@ -34,6 +34,7 @@ Future<void> _initializeApp() async {
     LessonData.lessonsByDay[day]!.addAll(loadedeLessons[day]!);
   }
   TaskData.tasks = await TaskRepository.load(termId: termId);
+  await NotificationService.syncTaskDeadlineNotifications(TaskData.tasks);
   TaskData.notifyChanged();
   await AttendanceStorage.load();
 }

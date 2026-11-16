@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/repository/task_repository.dart';
+import '../../services/simple_notification_service.dart';
 import 'task_data.dart';
 import '../../data/repository/task_artifact_reposirotory.dart';
 
@@ -539,6 +540,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         widget.task.isDone = newStatus;
         _isUpdatingStatus = false;
       });
+      await _updateDeadlineReminder();
     } catch (error) {
       if (!mounted) return;
 
@@ -547,6 +549,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       });
 
       _showSnackBar('提出状況の更新に失敗しました。$error');
+    }
+  }
+
+  Future<void> _updateDeadlineReminder() async {
+    try {
+      await NotificationService.updateTaskDeadlineNotification(widget.task);
+    } on Exception catch (error) {
+      if (!mounted) return;
+      _showSnackBar('提出状況は更新しましたが、締切通知の設定に失敗しました。$error');
     }
   }
 
@@ -577,6 +588,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
     try {
       await TaskRepository.delete(widget.task);
+      try {
+        await NotificationService.cancelTaskDeadlineNotifications(widget.task);
+      } on Exception catch (error) {
+        if (mounted) {
+          _showSnackBar('課題は削除しましたが、締切通知の取消しに失敗しました。$error');
+        }
+      }
       if (!mounted) return;
       if (Navigator.maybeOf(context) != null) {
         Navigator.of(context).pop(true);
