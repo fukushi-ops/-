@@ -20,6 +20,13 @@ class Lesson {
   int? lessonId;
 }
 
+class LessonImport {
+  const LessonImport({required this.weekday, required this.lesson});
+
+  final String weekday;
+  final Lesson lesson;
+}
+
 class LessonData {
   static final Map<String, List<Lesson>> lessonsByDay = {
     '月': [],

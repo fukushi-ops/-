@@ -27,6 +27,9 @@ class _EditClassScreenState extends State<EditClassScreen> {
   }
 
   int parseStartTime(String time) {
+    final period = RegExp(r'^\s*(\d{1,2})\s*限').firstMatch(time);
+    if (period != null) return int.parse(period.group(1)!) * 100;
+
     final separators = ["～", "〜", "~", "-", "ー"];
     String start = time;
 
