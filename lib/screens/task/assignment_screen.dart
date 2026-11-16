@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import '../../data/repository/lesson_repository.dart';
 import '../../data/repository/task_repository.dart';
 import '../../services/simple_notification_service.dart';
+import '../../widgets/active_term_action.dart';
 import 'add_assignment_screen.dart';
 import 'edit_assignument_screen.dart';
 import 'task_data.dart';
 import 'task_detail_screen.dart';
 
 class AssignmentScreen extends StatefulWidget {
-  const AssignmentScreen({super.key});
+  const AssignmentScreen({super.key, this.onTermSelected});
+
+  final Future<void> Function(int termId)? onTermSelected;
 
   @override
   State<AssignmentScreen> createState() => _AssignmentScreenState();
@@ -132,6 +135,11 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       ..sort(),
   ];
 
+  String _difficultyLabel(String value) {
+    final level = int.tryParse(value);
+    return level == null ? value : '$level / 5';
+  }
+
   int get _activeFilterCount =>
       (_maxScoreFilter > 0 ? 1 : 0) +
       (_difficultyFilter != 'すべて' ? 1 : 0) +
@@ -149,16 +157,11 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('課題'),
-            Text(
-              '締切と提出状況をまとめて管理',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-            ),
-          ],
-        ),
+        title: const Text('課題'),
+        actions: [
+          if (widget.onTermSelected != null)
+            ActiveTermAction(onTermSelected: widget.onTermSelected!),
+        ],
       ),
       body: CustomScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -170,28 +173,37 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                 children: [
                   Expanded(
                     child: _SummaryCard(
+                      key: const ValueKey('statusFilter_0'),
                       label: 'すべて',
                       value: '${TaskData.tasks.length}',
                       icon: Icons.assignment_outlined,
                       color: theme.colorScheme.primary,
+                      selected: _statusFilter == 0,
+                      onTap: () => setState(() => _statusFilter = 0),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _SummaryCard(
+                      key: const ValueKey('statusFilter_1'),
                       label: '未提出',
                       value: '$pendingCount',
                       icon: Icons.schedule_outlined,
                       color: Colors.deepOrange,
+                      selected: _statusFilter == 1,
+                      onTap: () => setState(() => _statusFilter = 1),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _SummaryCard(
+                      key: const ValueKey('statusFilter_2'),
                       label: '提出済み',
                       value: '$completedCount',
                       icon: Icons.check_circle_outline,
                       color: Colors.teal,
+                      selected: _statusFilter == 2,
+                      onTap: () => setState(() => _statusFilter = 2),
                     ),
                   ),
                 ],
@@ -228,6 +240,60 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: PopupMenuButton<String>(
+                      key: const Key('subjectFilterButton'),
+                      tooltip: '科目で絞り込む',
+                      onSelected: (subject) =>
+                          setState(() => _subjectFilter = subject),
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
+                          value: 'すべて',
+                          child: Text('すべての科目'),
+                        ),
+                        for (final subject in subjects.skip(1))
+                          PopupMenuItem(value: subject, child: Text(subject)),
+                      ],
+                      child: Container(
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: theme.colorScheme.outlineVariant,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.menu_book_outlined,
+                              size: 18,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _subjectFilter == 'すべて'
+                                    ? 'すべての科目'
+                                    : _subjectFilter,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Icon(Icons.arrow_drop_down),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
                     onPressed: _openAdvancedFilters,
@@ -237,69 +303,6 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                     ),
                   ),
                 ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 44,
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _FilterChip(
-                    label: 'すべて',
-                    selected: _statusFilter == 0,
-                    onSelected: () => setState(() => _statusFilter = 0),
-                  ),
-                  _FilterChip(
-                    label: '未提出',
-                    selected: _statusFilter == 1,
-                    onSelected: () => setState(() => _statusFilter = 1),
-                  ),
-                  _FilterChip(
-                    label: '提出済み',
-                    selected: _statusFilter == 2,
-                    onSelected: () => setState(() => _statusFilter = 2),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 16, 8),
-              child: Row(
-                children: [
-                  Icon(Icons.book_outlined, size: 18, color: theme.hintColor),
-                  const SizedBox(width: 8),
-                  Text(
-                    '教科で絞り込む',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 42,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: subjects.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final subject = subjects[index];
-                  return _FilterChip(
-                    label: subject,
-                    selected: _subjectFilter == subject,
-                    onSelected: () => setState(() => _subjectFilter = subject),
-                    outlined: true,
-                  );
-                },
               ),
             ),
           ),
@@ -327,13 +330,17 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
             ),
           ),
           if (filteredTasks.isEmpty)
-            SliverToBoxAdapter(
+            SliverFillRemaining(
+              hasScrollBody: false,
               child: _EmptyAssignments(
+                isTaskListEmpty: TaskData.tasks.isEmpty,
                 subjectFilter: _subjectFilter,
                 statusFilter: _statusFilter,
                 hasAdditionalFilters:
                     _searchController.text.trim().isNotEmpty ||
                     _activeFilterCount > 0,
+                onAddTask: _addTask,
+                onResetFilters: _resetFilters,
               ),
             )
           else
@@ -358,6 +365,17 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
               label: const Text('課題を追加'),
             ),
     );
+  }
+
+  void _resetFilters() {
+    _searchController.clear();
+    setState(() {
+      _statusFilter = 0;
+      _subjectFilter = 'すべて';
+      _maxScoreFilter = 0;
+      _difficultyFilter = 'すべて';
+      _deadlineFilter = 'すべて';
+    });
   }
 
   Future<void> _openAdvancedFilters() async {
@@ -420,7 +438,11 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                       .map(
                         (value) => DropdownMenuItem(
                           value: value,
-                          child: Text(value == 'すべて' ? '指定なし' : value),
+                          child: Text(
+                            value == 'すべて'
+                                ? '指定なし'
+                                : _difficultyLabel(value),
+                          ),
                         ),
                       )
                       .toList(),
@@ -529,7 +551,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
           return false;
         }
       },
-      onDismissed: (_) => setState(() => TaskData.tasks.remove(task)),
+      onDismissed: (_) => setState(() => TaskData.removeTask(task)),
       child: Card(
         margin: const EdgeInsets.only(bottom: 12),
         elevation: 0,
@@ -560,12 +582,43 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              task.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                decoration: task.isDone
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                                color: task.isDone ? theme.hintColor : null,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _StatusBadge(
+                            label: '優先度${_priorityLabel(task.priority)}',
+                            color: _priorityColor(task.priority),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
                       Wrap(
-                        spacing: 6,
+                        spacing: 8,
                         runSpacing: 4,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          _SubjectBadge(subject: task.subject),
+                          Text(
+                            task.subject,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           if (task.isDone)
                             const _StatusBadge(
                               label: '提出済み',
@@ -576,26 +629,9 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                               label: isOverdue ? '期限切れ' : '今日が締切',
                               color: Colors.deepOrange,
                             ),
-                          _StatusBadge(
-                            label: '優先度${_priorityLabel(task.priority)}',
-                            color: _priorityColor(task.priority),
-                          ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        task.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          decoration: task.isDone
-                              ? TextDecoration.lineThrough
-                              : null,
-                          color: task.isDone ? theme.hintColor : null,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Row(
                         children: [
                           Icon(
@@ -604,24 +640,22 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                             color: statusColor,
                           ),
                           const SizedBox(width: 5),
-                          Text(
-                            '締切 ${task.deadline}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: statusColor,
-                              fontWeight: FontWeight.w600,
+                          Expanded(
+                            child: Text(
+                              '締切 ${task.deadline}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: statusColor,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                          if (!task.isDone &&
-                              daysLeft != null &&
-                              daysLeft > 0) ...[
-                            const SizedBox(width: 8),
+                          if (!task.isDone && daysLeft != null && daysLeft > 0)
                             Text(
                               'あと$daysLeft日',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.hintColor,
                               ),
                             ),
-                          ],
                         ],
                       ),
                       if (task.progress > 0 && !task.isDone) ...[
@@ -744,8 +778,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
     );
     if (deleted != true || !mounted) return;
     setState(() {
-      TaskData.tasks.remove(task);
-      TaskData.notifyChanged();
+      TaskData.removeTask(task);
     });
   }
 
@@ -780,110 +813,70 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({
+    super.key,
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
+    required this.selected,
+    required this.onTap,
   });
 
   final String label;
   final String value;
   final IconData icon;
   final Color color;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 19, color: color),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        key: key,
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: selected ? 0.13 : 0.06),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? color.withValues(alpha: 0.6)
+                  : Colors.transparent,
             ),
           ),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: color),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 16, color: color),
+                  const Spacer(),
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: color),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onSelected,
-    this.outlined = false,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onSelected;
-  final bool outlined;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = outlined ? Theme.of(context).colorScheme.secondary : null;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => onSelected(),
-        showCheckmark: false,
-        visualDensity: VisualDensity.compact,
-        side: outlined && !selected
-            ? BorderSide(color: color!.withValues(alpha: 0.35))
-            : BorderSide.none,
-        selectedColor: (color ?? Theme.of(context).colorScheme.primary)
-            .withValues(alpha: 0.14),
-        labelStyle: TextStyle(
-          color: selected
-              ? (color ?? Theme.of(context).colorScheme.primary)
-              : null,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-    );
-  }
-}
-
-class _SubjectBadge extends StatelessWidget {
-  const _SubjectBadge({required this.subject});
-
-  final String subject;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        subject,
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -918,18 +911,24 @@ class _StatusBadge extends StatelessWidget {
 
 class _EmptyAssignments extends StatelessWidget {
   const _EmptyAssignments({
+    required this.isTaskListEmpty,
     required this.subjectFilter,
     required this.statusFilter,
     required this.hasAdditionalFilters,
+    required this.onAddTask,
+    required this.onResetFilters,
   });
 
+  final bool isTaskListEmpty;
   final String subjectFilter;
   final int statusFilter;
   final bool hasAdditionalFilters;
+  final VoidCallback onAddTask;
+  final VoidCallback onResetFilters;
 
   @override
   Widget build(BuildContext context) {
-    final message = TaskData.tasks.isEmpty
+    final message = isTaskListEmpty
         ? '課題がまだありません'
         : hasAdditionalFilters
         ? '条件に合う課題はありません'
@@ -948,7 +947,7 @@ class _EmptyAssignments extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.task_alt,
+              isTaskListEmpty ? Icons.assignment_outlined : Icons.search_off,
               size: 52,
               color: Theme.of(context).colorScheme.outlineVariant,
             ),
@@ -961,12 +960,27 @@ class _EmptyAssignments extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '検索語や絞り込み条件を変更してみてください',
+              isTaskListEmpty
+                  ? '課題を登録すると、ここで締切や進捗を管理できます'
+                  : '検索語や絞り込み条件をリセットして、課題を確認できます',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).hintColor,
               ),
             ),
+            const SizedBox(height: 16),
+            if (isTaskListEmpty)
+              FilledButton.icon(
+                onPressed: onAddTask,
+                icon: const Icon(Icons.add),
+                label: const Text('課題を追加'),
+              )
+            else
+              OutlinedButton.icon(
+                onPressed: onResetFilters,
+                icon: const Icon(Icons.filter_alt_off),
+                label: const Text('絞り込みをリセット'),
+              ),
           ],
         ),
       ),

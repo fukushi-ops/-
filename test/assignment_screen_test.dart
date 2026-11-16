@@ -22,7 +22,7 @@ void main() {
     TaskData.tasks = [];
   });
 
-  testWidgets('課題詳細画面を表示できる', (tester) async {
+  testWidgets('未提出の課題詳細では作業メモを表示せず、成果物と振り返りを隠す', (tester) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -47,6 +47,41 @@ void main() {
 
     expect(find.text('課題詳細'), findsOneWidget);
     expect(find.text('数学レポート'), findsOneWidget);
+    expect(find.text('作業メモ'), findsNothing);
+    expect(find.text('成果物'), findsNothing);
+    expect(find.text('振り返り'), findsNothing);
+  });
+
+  testWidgets('提出済みの課題詳細で成果物・振り返りを表示し、難易度を数字で選べる', (tester) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TaskDetailScreen(
+          task: Task(
+            title: '数学レポート',
+            subject: '数学',
+            deadline: '2026-11-30',
+            isDone: true,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('成果物'), findsOneWidget);
+    expect(find.text('振り返り'), findsOneWidget);
+    await tester.tap(find.text('振り返りを追加'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('難易度（1〜5）'), findsOneWidget);
+    await tester.tap(find.byType(DropdownButtonFormField<int>).last);
+    await tester.pumpAndSettle();
+    expect(find.text('1 / 5'), findsWidgets);
+    expect(find.text('5 / 5'), findsOneWidget);
   });
 
   testWidgets('課題を教科と提出状況で絞り込める', (tester) async {
@@ -61,7 +96,9 @@ void main() {
     expect(find.text('数学小テスト'), findsOneWidget);
     expect(find.text('英語課題'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ChoiceChip, '数学'));
+    await tester.tap(find.byKey(const ValueKey('subjectFilterButton')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(PopupMenuItem<String>, '数学'));
     await tester.pumpAndSettle();
 
     expect(find.text('数学 の課題'), findsOneWidget);
@@ -69,12 +106,44 @@ void main() {
     expect(find.text('数学小テスト'), findsOneWidget);
     expect(find.text('英語課題'), findsNothing);
 
-    await tester.tap(find.widgetWithText(ChoiceChip, '未提出'));
+    await tester.tap(find.byKey(const ValueKey('statusFilter_1')).last);
     await tester.pumpAndSettle();
 
     expect(find.text('数学レポート'), findsOneWidget);
     expect(find.text('数学小テスト'), findsNothing);
     expect(find.text('英語課題'), findsNothing);
+  });
+
+  testWidgets('課題がない場合は追加アクションを表示する', (tester) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    TaskData.tasks = [];
+
+    await tester.pumpWidget(const MaterialApp(home: AssignmentScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('課題がまだありません'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, '課題を追加'), findsOneWidget);
+  });
+
+  testWidgets('検索結果がない場合は絞り込みをリセットできる', (tester) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const MaterialApp(home: AssignmentScreen()));
+    await tester.enterText(find.byType(TextField), '該当なし');
+    await tester.pumpAndSettle();
+
+    expect(find.text('条件に合う課題はありません'), findsOneWidget);
+    await tester.tap(find.text('絞り込みをリセット'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('数学レポート'), findsOneWidget);
+    expect(find.text('英語課題'), findsOneWidget);
   });
 
   testWidgets('キーボード表示中に画面がオーバーフローしない', (tester) async {

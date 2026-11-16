@@ -84,133 +84,135 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ),
           const SizedBox(height: 16),
           _buildProgressSection(context),
-          const SizedBox(height: 16),
-          _buildSection(
-            title: '成果物',
-            children: _isLoadingArtifact
-                ? const [
-                    Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  ]
-                : _artifactLoadError != null
-                ? [
-                    ListTile(
-                      title: const Text('成果物を読み込めませんでした'),
-                      subtitle: Text(_artifactLoadError!),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        onPressed: _loadArtifact,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('再試行'),
+          if (widget.task.isDone) ...[
+            const SizedBox(height: 16),
+            _buildSection(
+              title: '成果物',
+              children: _isLoadingArtifact
+                  ? const [
+                      Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: CircularProgressIndicator()),
                       ),
-                    ),
-                  ]
-                : [
-                    if (_artifactName == null)
-                      _ArtifactEmptyState(
-                        onAdd: _isDeletingArtifact ? null : _editArtifact,
-                      )
-                    else ...[
-                      _ArtifactNameCard(name: _artifactName!),
-                      if ((_artifactDescription ?? '').isNotEmpty)
-                        _ArtifactDetailRow(
-                          icon: Icons.notes_outlined,
-                          label: '説明',
-                          value: _artifactDescription!,
-                        ),
-                      if ((_artifactLocation ?? '').isNotEmpty)
-                        _ArtifactDetailRow(
-                          icon: Icons.folder_open_outlined,
-                          label: '保存場所',
-                          value: _artifactLocation!,
-                        ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _isDeletingArtifact
-                                  ? null
-                                  : _deleteArtifact,
-                              icon: _isDeletingArtifact
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.delete_outline),
-                              label: const Text('削除'),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: FilledButton.tonalIcon(
-                              onPressed: _isDeletingArtifact
-                                  ? null
-                                  : _editArtifact,
-                              icon: const Icon(Icons.edit_outlined),
-                              label: const Text('編集'),
-                            ),
-                          ),
-                        ],
+                    ]
+                  : _artifactLoadError != null
+                  ? [
+                      ListTile(
+                        title: const Text('成果物を読み込めませんでした'),
+                        subtitle: Text(_artifactLoadError!),
                       ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: _loadArtifact,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('再試行'),
+                        ),
+                      ),
+                    ]
+                  : [
+                      if (_artifactName == null)
+                        _ArtifactEmptyState(
+                          onAdd: _isDeletingArtifact ? null : _editArtifact,
+                        )
+                      else ...[
+                        _ArtifactNameCard(name: _artifactName!),
+                        if ((_artifactDescription ?? '').isNotEmpty)
+                          _ArtifactDetailRow(
+                            icon: Icons.notes_outlined,
+                            label: '説明',
+                            value: _artifactDescription!,
+                          ),
+                        if ((_artifactLocation ?? '').isNotEmpty)
+                          _ArtifactDetailRow(
+                            icon: Icons.folder_open_outlined,
+                            label: '保存場所',
+                            value: _artifactLocation!,
+                          ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _isDeletingArtifact
+                                    ? null
+                                    : _deleteArtifact,
+                                icon: _isDeletingArtifact
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.delete_outline),
+                                label: const Text('削除'),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FilledButton.tonalIcon(
+                                onPressed: _isDeletingArtifact
+                                    ? null
+                                    : _editArtifact,
+                                icon: const Icon(Icons.edit_outlined),
+                                label: const Text('編集'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
-          ),
-          const SizedBox(height: 16),
-          _buildSection(
-            title: '振り返り',
-            children: [
-              if (widget.task.reflectionScore == null &&
-                  (widget.task.reflectionDifficulty ?? '').isEmpty &&
-                  (widget.task.reflectionLearned ?? '').isEmpty &&
-                  (widget.task.reflectionGoodPoint ?? '').isEmpty &&
-                  (widget.task.reflectionImprovement ?? '').isEmpty)
-                _ReflectionEmptyState(onAdd: _editReflection)
-              else ...[
-                if (widget.task.reflectionScore != null)
-                  _DetailItem(
-                    label: '出来栄え',
-                    value: '${widget.task.reflectionScore} / 5',
+            ),
+            const SizedBox(height: 16),
+            _buildSection(
+              title: '振り返り',
+              children: [
+                if (widget.task.reflectionScore == null &&
+                    (widget.task.reflectionDifficulty ?? '').isEmpty &&
+                    (widget.task.reflectionLearned ?? '').isEmpty &&
+                    (widget.task.reflectionGoodPoint ?? '').isEmpty &&
+                    (widget.task.reflectionImprovement ?? '').isEmpty)
+                  _ReflectionEmptyState(onAdd: _editReflection)
+                else ...[
+                  if (widget.task.reflectionScore != null)
+                    _DetailItem(
+                      label: '出来栄え',
+                      value: '${widget.task.reflectionScore} / 5',
+                    ),
+                  if ((widget.task.reflectionDifficulty ?? '').isNotEmpty)
+                    _DetailItem(
+                      label: '難易度',
+                      value: _difficultyLabel(widget.task.reflectionDifficulty!),
+                    ),
+                  if ((widget.task.reflectionLearned ?? '').isNotEmpty)
+                    _DetailItem(
+                      label: '学んだこと',
+                      value: widget.task.reflectionLearned!,
+                    ),
+                  if ((widget.task.reflectionGoodPoint ?? '').isNotEmpty)
+                    _DetailItem(
+                      label: 'うまくできたこと',
+                      value: widget.task.reflectionGoodPoint!,
+                    ),
+                  if ((widget.task.reflectionImprovement ?? '').isNotEmpty)
+                    _DetailItem(
+                      label: '改善点',
+                      value: widget.task.reflectionImprovement!,
+                    ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.tonalIcon(
+                      onPressed: _editReflection,
+                      icon: const Icon(Icons.edit_note_outlined),
+                      label: const Text('振り返りを編集'),
+                    ),
                   ),
-                if ((widget.task.reflectionDifficulty ?? '').isNotEmpty)
-                  _DetailItem(
-                    label: '難易度',
-                    value: widget.task.reflectionDifficulty!,
-                  ),
-                if ((widget.task.reflectionLearned ?? '').isNotEmpty)
-                  _DetailItem(
-                    label: '学んだこと',
-                    value: widget.task.reflectionLearned!,
-                  ),
-                if ((widget.task.reflectionGoodPoint ?? '').isNotEmpty)
-                  _DetailItem(
-                    label: 'うまくできたこと',
-                    value: widget.task.reflectionGoodPoint!,
-                  ),
-                if ((widget.task.reflectionImprovement ?? '').isNotEmpty)
-                  _DetailItem(
-                    label: '改善点',
-                    value: widget.task.reflectionImprovement!,
-                  ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.tonalIcon(
-                    onPressed: _editReflection,
-                    icon: const Icon(Icons.edit_note_outlined),
-                    label: const Text('振り返りを編集'),
-                  ),
-                ),
+                ],
               ],
-            ],
-          ),
+            ),
+          ],
           const SizedBox(height: 24),
           OutlinedButton.icon(
             onPressed: _isDeletingTask ? null : _deleteTask,
@@ -232,14 +234,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   void initState() {
     super.initState();
     _draftProgress = widget.task.progress.toDouble();
-    _loadArtifact();
+    if (widget.task.isDone) _loadArtifact();
   }
 
   Widget _buildProgressSection(BuildContext context) {
     final theme = Theme.of(context);
     final task = widget.task;
     return _buildSection(
-      title: '進捗・作業メモ',
+      title: '進捗',
       children: [
         Row(
           children: [
@@ -348,20 +350,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     },
             );
           }),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: _isSavingProgress ? null : _editWorkMemo,
-          icon: const Icon(Icons.edit_note),
-          label: Text(task.workMemo.isEmpty ? '作業メモを追加' : '作業メモを編集'),
-        ),
-        if (task.workMemo.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(task.workMemo),
-            ),
-          ),
         if (_isSavingProgress)
           const Padding(
             padding: EdgeInsets.only(top: 8),
@@ -389,7 +377,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         widget.task
           ..priority = updatedTask.priority
           ..progress = updatedTask.progress
-          ..workMemo = updatedTask.workMemo
           ..checklist = updatedTask.checklist;
         _draftProgress = updatedTask.progress.toDouble();
         _isSavingProgress = false;
@@ -454,39 +441,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     await _saveTask(_taskWithChecklist(widget.task, checklist));
   }
 
-  Future<void> _editWorkMemo() async {
-    final controller = TextEditingController(text: widget.task.workMemo);
-    try {
-      final memo = await showDialog<String>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('作業メモ'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            maxLines: 5,
-            decoration: const InputDecoration(hintText: '作業内容や次にやること'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('キャンセル'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, controller.text.trim()),
-              child: const Text('保存'),
-            ),
-          ],
-        ),
-      );
-      if (!mounted || memo == null) return;
-      await _saveTask(widget.task.copyWith(workMemo: memo));
-    } finally {
-      controller.dispose();
-    }
-  }
-
   Future<void> _loadArtifact() async {
     setState(() {
       _isLoadingArtifact = true;
@@ -540,6 +494,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         widget.task.isDone = newStatus;
         _isUpdatingStatus = false;
       });
+      if (newStatus) await _loadArtifact();
       await _updateDeadlineReminder();
     } catch (error) {
       if (!mounted) return;
@@ -761,9 +716,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Future<void> _editReflection() async {
-    final difficultyController = TextEditingController(
-      text: widget.task.reflectionDifficulty ?? '',
-    );
     final learnedController = TextEditingController(
       text: widget.task.reflectionLearned ?? '',
     );
@@ -774,6 +726,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       text: widget.task.reflectionImprovement ?? '',
     );
     int? scoreValue = widget.task.reflectionScore;
+    final storedDifficulty = widget.task.reflectionDifficulty;
+    int? difficultyValue = int.tryParse(storedDifficulty ?? '');
+    if (difficultyValue != null &&
+        (difficultyValue < 1 || difficultyValue > 5)) {
+      difficultyValue = null;
+    }
 
     final formKey = GlobalKey<FormState>();
 
@@ -804,10 +762,18 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         value == null ? '出来栄えを選択してください' : null,
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: difficultyController,
-                    decoration: const InputDecoration(labelText: '難易度'),
-                    maxLines: 1,
+                  DropdownButtonFormField<int>(
+                    initialValue: difficultyValue,
+                    decoration: const InputDecoration(labelText: '難易度（1〜5）'),
+                    items: List.generate(5, (index) => index + 1)
+                        .map(
+                          (level) => DropdownMenuItem(
+                            value: level,
+                            child: Text('$level / 5'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => difficultyValue = value,
                   ),
                   TextFormField(
                     controller: learnedController,
@@ -847,7 +813,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   dialogContext,
                   _ReflectionInput(
                     score: scoreValue!,
-                    difficulty: difficultyController.text.trim(),
+                    difficulty:
+                        difficultyValue?.toString() ?? storedDifficulty ?? '',
                     learned: learnedController.text.trim(),
                     goodPoint: goodPointController.text.trim(),
                     improvement: improvementController.text.trim(),
@@ -887,7 +854,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         _showSnackBar('振り返りの保存に失敗しました。$error');
       }
     } finally {
-      difficultyController.dispose();
       learnedController.dispose();
       goodPointController.dispose();
       improvementController.dispose();
@@ -952,6 +918,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
     return 'あと$daysUntilDeadline日';
   }
+
+  String _difficultyLabel(String value) {
+    final level = int.tryParse(value);
+    return level == null ? value : '$level / 5';
+  }
 }
 
 class _ReflectionInput {
@@ -1003,7 +974,7 @@ class _ReflectionEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '出来栄えや学んだこと、改善点を残しましょう',
+            '出来栄えや難易度（1〜5）、学んだこと、改善点を残しましょう',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),

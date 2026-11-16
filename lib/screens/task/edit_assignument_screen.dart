@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../data/repository/lesson_repository.dart';
+import '../../widgets/subject_dropdown_field.dart';
+import 'task_deadline_picker.dart';
 import 'task_data.dart';
 
 class EditAssignmentScreen extends StatefulWidget {
@@ -14,15 +17,15 @@ class EditAssignmentScreen extends StatefulWidget {
 class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
-  late final TextEditingController _subjectController;
   late final TextEditingController _deadlineController;
+  String? _selectedSubject;
   late int _priority;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.task.title);
-    _subjectController = TextEditingController(text: widget.task.subject);
+    _selectedSubject = widget.task.subject;
     _deadlineController = TextEditingController(text: widget.task.deadline);
     _priority = widget.task.priority;
   }
@@ -30,7 +33,6 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
   @override
   void dispose() {
     _titleController.dispose();
-    _subjectController.dispose();
     _deadlineController.dispose();
     super.dispose();
   }
@@ -124,17 +126,13 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
                   value == null || value.trim().isEmpty ? '課題名を入力してください' : null,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _subjectController,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: '教科',
-                hintText: '例：情報',
-                prefixIcon: Icon(Icons.menu_book_outlined),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? '教科を入力してください' : null,
+            SubjectDropdownField(
+              termId: LessonRepository.activeTermId,
+              initialValue: _selectedSubject,
+              onChanged: (subject) => setState(() {
+                _selectedSubject = subject;
+              }),
+              validator: (value) => value == null ? '科目を選択してください' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -248,29 +246,27 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
 
   Future<void> _selectDeadline() async {
     final current = DateTime.tryParse(_deadlineController.text.trim());
-    final selected = await showDatePicker(
-      context: context,
-      initialDate: current ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      helpText: '締切日を選択',
-    );
+    final selected = await selectTaskDeadline(context, initialDate: current);
     if (selected == null || !mounted) return;
-    _deadlineController.text =
-        '${selected.year.toString().padLeft(4, '0')}-'
-        '${selected.month.toString().padLeft(2, '0')}-'
-        '${selected.day.toString().padLeft(2, '0')}';
+    _deadlineController.text = formatTaskDeadline(selected);
   }
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
+    final subject = _selectedSubject;
+    if (subject == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('科目を選択してください')));
+      return;
+    }
 
     Navigator.pop<Task>(
       context,
       Task(
         id: widget.task.id,
         title: _titleController.text.trim(),
-        subject: _subjectController.text.trim(),
+        subject: subject,
         deadline: _deadlineController.text.trim(),
         isDone: widget.task.isDone,
         priority: _priority,

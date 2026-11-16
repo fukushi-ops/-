@@ -90,6 +90,12 @@ class TaskData {
   static void notifyChanged() {
     changed.value = Object();
   }
+
+  static bool removeTask(Task task) {
+    final removed = tasks.remove(task);
+    if (removed) notifyChanged();
+    return removed;
+  }
 }
 
 class TaskArtifact {

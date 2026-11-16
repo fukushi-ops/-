@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'task_detail_screen.dart';
+import '../../widgets/active_term_action.dart';
 import 'task_data.dart';
 
 class LearningHistoryScreen extends StatefulWidget {
-  const LearningHistoryScreen({super.key});
+  const LearningHistoryScreen({super.key, this.onTermSelected});
+
+  final Future<void> Function(int termId)? onTermSelected;
 
   @override
   State<LearningHistoryScreen> createState() => _LearningHistoryScreenState();
@@ -61,7 +63,13 @@ class _LearningHistoryScreenState extends State<LearningHistoryScreen> {
     final trendTasks = _scoredTasksByDeadline();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('学習履歴')),
+      appBar: AppBar(
+        title: const Text('学習履歴'),
+        actions: [
+          if (widget.onTermSelected != null)
+            ActiveTermAction(onTermSelected: widget.onTermSelected!),
+        ],
+      ),
       body: subjectStats.isEmpty
           ? const _EmptyState()
           : ListView(
@@ -87,29 +95,9 @@ class _LearningHistoryScreenState extends State<LearningHistoryScreen> {
                 _SectionTitle(title: '科目別集計'),
                 const SizedBox(height: 12),
                 ...subjectStats.map((stat) => _SubjectCard(stat: stat)),
-                const SizedBox(height: 18),
-                _SectionTitle(title: '課題履歴（${TaskData.tasks.length}件）'),
-                const SizedBox(height: 12),
-                ..._historyTasks().map(
-                  (task) =>
-                      _RecentTaskCard(task: task, onTap: () => _openTask(task)),
-                ),
               ],
             ),
     );
-  }
-
-  Future<void> _openTask(Task task) async {
-    final deleted = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
-    );
-    if (!mounted) return;
-    if (deleted == true) {
-      TaskData.tasks.remove(task);
-      TaskData.notifyChanged();
-    }
-    setState(() {});
   }
 
   double _averageScore(List<Task> tasks) {
@@ -136,19 +124,6 @@ class _LearningHistoryScreenState extends State<LearningHistoryScreen> {
       if (aDate == null) return 1;
       if (bDate == null) return -1;
       return aDate.compareTo(bDate);
-    });
-    return tasks;
-  }
-
-  List<Task> _historyTasks() {
-    final tasks = List<Task>.from(TaskData.tasks);
-    tasks.sort((a, b) {
-      final aDate = DateTime.tryParse(a.deadline);
-      final bDate = DateTime.tryParse(b.deadline);
-      if (aDate == null && bDate == null) return 0;
-      if (aDate == null) return 1;
-      if (bDate == null) return -1;
-      return bDate.compareTo(aDate);
     });
     return tasks;
   }
@@ -513,81 +488,6 @@ class _SubjectCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _RecentTaskCard extends StatelessWidget {
-  const _RecentTaskCard({required this.task, required this.onTap});
-
-  final Task task;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dueDate = DateTime.tryParse(task.deadline);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      elevation: 0,
-      color: theme.colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.2)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      task.title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  if (task.isDone)
-                    const Icon(Icons.check_circle, color: Colors.teal)
-                  else
-                    const Icon(Icons.schedule_outlined, color: Colors.orange),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                task.subject,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.hintColor,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(Icons.event_outlined, size: 16, color: theme.hintColor),
-                  const SizedBox(width: 6),
-                  Text(dueDate == null ? task.deadline : '締切 ${task.deadline}'),
-                  const Spacer(),
-                  if (task.reflectionScore != null)
-                    Text(
-                      '評価 ${task.reflectionScore} / 5',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

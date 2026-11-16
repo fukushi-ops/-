@@ -7,6 +7,7 @@ import 'screens/task/task_data.dart';
 import 'screens/main_screen.dart';
 import 'data/data_main/isar_service.dart';
 import 'data/repository/lesson_repository.dart';
+import 'data/repository/subject_repository.dart';
 import 'data/repository/task_repository.dart';
 import 'services/simple_notification_service.dart';
 
@@ -28,6 +29,7 @@ Future<void> _initializeApp() async {
     termName: '通年',
   );
 
+  await SubjectRepository.importExisting(termId: termId);
   final loadedeLessons = await LessonRepository.loadLessons(termId: termId);
   for (final day in LessonData.lessonsByDay.keys) {
     LessonData.lessonsByDay[day]!.clear();

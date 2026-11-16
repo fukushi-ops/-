@@ -6,6 +6,7 @@ import '../data_main/isar_service.dart';
 
 class LessonRepository {
   static int? _activeTermId;
+  static String? _activeTermName;
 
   static int get activeTermId {
     final id = _activeTermId;
@@ -15,11 +16,26 @@ class LessonRepository {
     return id;
   }
 
+  static int? get maybeActiveTermId => _activeTermId;
+
+  static String? get activeTermName => _activeTermName;
+
   static Future<int> ensureTerm({
     required int schoolYear,
     required String termName,
   }) async {
     final isar = IsarService.instance;
+
+    final settings = await isar.appSettings.get(1);
+    final selectedTermId = settings?.selectedTermId;
+    if (selectedTermId != null) {
+      final selectedTerm = await isar.academicTerms.get(selectedTermId);
+      if (selectedTerm != null) {
+        _activeTermId = selectedTerm.id;
+        _activeTermName = selectedTerm.termName;
+        return selectedTerm.id;
+      }
+    }
 
     final term = await isar.academicTerms
         .filter()
@@ -44,7 +60,128 @@ class LessonRepository {
     });
 
     _activeTermId = activeTerm.id;
+    _activeTermName = activeTerm.termName;
     return activeTerm.id;
+  }
+
+  static Future<List<AcademicTerm>> loadTerms() async {
+    final terms = await IsarService.instance.academicTerms.where().findAll();
+    terms.sort((a, b) {
+      final yearOrder = b.schoolYear.compareTo(a.schoolYear);
+      return yearOrder != 0 ? yearOrder : a.termName.compareTo(b.termName);
+    });
+    return terms;
+  }
+
+  static Future<bool> termExists({
+    required int schoolYear,
+    required String termName,
+  }) async {
+    return await IsarService.instance.academicTerms
+            .filter()
+            .schoolYearEqualTo(schoolYear)
+            .termNameEqualTo(termName.trim())
+            .findFirst() !=
+        null;
+  }
+
+  static Future<bool> hasTermData({required int termId}) async {
+    final isar = IsarService.instance;
+    final course = await isar.courseEntitys
+        .filter()
+        .termIdEqualTo(termId)
+        .findFirst();
+    if (course != null) return true;
+
+    final task = await isar.taskEntitys
+        .filter()
+        .termIdEqualTo(termId)
+        .findFirst();
+    if (task != null) return true;
+
+    final subject = await isar.subjectEntitys
+        .filter()
+        .termIdEqualTo(termId)
+        .findFirst();
+    return subject != null;
+  }
+
+  static Future<AcademicTerm> createTerm({
+    required int schoolYear,
+    required String termName,
+    required bool moveExistingData,
+  }) async {
+    final normalizedName = termName.trim();
+    if (normalizedName.isEmpty) {
+      throw ArgumentError.value(termName, 'termName', '期間名を入力してください。');
+    }
+    if (await termExists(schoolYear: schoolYear, termName: normalizedName)) {
+      throw StateError('同じ年度に同じ期間名がすでに登録されています。');
+    }
+
+    final sourceTermId = moveExistingData ? activeTermId : null;
+    final isar = IsarService.instance;
+    final term = AcademicTerm()
+      ..schoolYear = schoolYear
+      ..termName = normalizedName;
+
+    await isar.writeTxn(() async {
+      await isar.academicTerms.put(term);
+
+      if (sourceTermId != null) {
+        final courses = await isar.courseEntitys
+            .filter()
+            .termIdEqualTo(sourceTermId)
+            .findAll();
+        for (final course in courses) {
+          course.termId = term.id;
+        }
+        if (courses.isNotEmpty) await isar.courseEntitys.putAll(courses);
+
+        final tasks = await isar.taskEntitys
+            .filter()
+            .termIdEqualTo(sourceTermId)
+            .findAll();
+        for (final task in tasks) {
+          task.termId = term.id;
+        }
+        if (tasks.isNotEmpty) await isar.taskEntitys.putAll(tasks);
+
+        final subjects = await isar.subjectEntitys
+            .filter()
+            .termIdEqualTo(sourceTermId)
+            .findAll();
+        for (final subject in subjects) {
+          subject.termId = term.id;
+        }
+        if (subjects.isNotEmpty) await isar.subjectEntitys.putAll(subjects);
+      }
+
+      final settings = await isar.appSettings.get(1) ?? (AppSettings()..id = 1);
+      settings.selectedTermId = term.id;
+      await isar.appSettings.put(settings);
+    });
+
+    _activeTermId = term.id;
+    _activeTermName = term.termName;
+    return term;
+  }
+
+  static Future<void> selectTerm({required int termId}) async {
+    final isar = IsarService.instance;
+    final term = await isar.academicTerms.get(termId);
+    if (term == null) {
+      throw StateError('切り替え先の期間が見つかりません。');
+    }
+
+    await isar.writeTxn(() async {
+      final settings = await isar.appSettings.get(1) ?? (AppSettings()..id = 1);
+      settings.selectedTermId = termId;
+      await isar.appSettings.put(settings);
+    });
+
+    _activeTermId = term.id;
+    _activeTermName = term.termName;
   }
 
   static Future<Map<String, List<Lesson>>> loadLessons({

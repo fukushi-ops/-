@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../data/repository/lesson_repository.dart';
+import '../../widgets/subject_dropdown_field.dart';
+import 'task_deadline_picker.dart';
 import 'task_data.dart';
 
 class AddAssignmentScreen extends StatefulWidget {
@@ -10,8 +14,15 @@ class AddAssignmentScreen extends StatefulWidget {
 
 class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
   final titleController = TextEditingController();
-  final subjectController = TextEditingController();
   final deadlineController = TextEditingController();
+  String? _selectedSubject;
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    deadlineController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +42,11 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
 
             const SizedBox(height: 20),
 
-            const Text("科目名", style: TextStyle(fontSize: 16)),
-            TextField(
-              controller: subjectController,
-              decoration: const InputDecoration(hintText: "例：情報"),
+            SubjectDropdownField(
+              termId: LessonRepository.activeTermId,
+              onChanged: (subject) => setState(() {
+                _selectedSubject = subject;
+              }),
             ),
 
             const SizedBox(height: 20),
@@ -42,7 +54,18 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
             const Text("締切", style: TextStyle(fontSize: 16)),
             TextField(
               controller: deadlineController,
-              decoration: const InputDecoration(hintText: "例：2026-08-09"),
+              readOnly: true,
+              onTap: _selectDeadline,
+              decoration: InputDecoration(
+                hintText: '日付を選択',
+                prefixIcon: const Icon(Icons.event_outlined),
+                suffixIcon: IconButton(
+                  tooltip: '日付を選択',
+                  onPressed: _selectDeadline,
+                  icon: const Icon(Icons.calendar_month),
+                ),
+                border: const OutlineInputBorder(),
+              ),
             ),
 
             const SizedBox(height: 30),
@@ -50,10 +73,15 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // 入力チェック
-                  if (titleController.text.isEmpty ||
-                      subjectController.text.isEmpty ||
-                      deadlineController.text.isEmpty) {
+                  final subject = _selectedSubject;
+                  if (subject == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("科目を選択してください")),
+                    );
+                    return;
+                  }
+                  if (titleController.text.trim().isEmpty ||
+                      deadlineController.text.trim().isEmpty) {
                     final messenger = ScaffoldMessenger.maybeOf(context);
                     messenger?.showSnackBar(
                       const SnackBar(content: Text("すべて入力してください")),
@@ -61,11 +89,10 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
                     return;
                   }
 
-                  // ★ Task を返す（ここが重要）
                   final newTask = Task(
-                    title: titleController.text,
-                    subject: subjectController.text,
-                    deadline: deadlineController.text,
+                    title: titleController.text.trim(),
+                    subject: subject,
+                    deadline: deadlineController.text.trim(),
                   );
 
                   Navigator.pop(context, newTask);
@@ -77,5 +104,11 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _selectDeadline() async {
+    final selected = await selectTaskDeadline(context);
+    if (selected == null || !mounted) return;
+    deadlineController.text = formatTaskDeadline(selected);
   }
 }

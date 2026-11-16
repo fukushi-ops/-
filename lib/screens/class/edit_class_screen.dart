@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../data/repository/lesson_repository.dart';
+import '../../widgets/subject_dropdown_field.dart';
 import 'lesson_data.dart';
 
 class EditClassScreen extends StatefulWidget {
@@ -11,7 +14,7 @@ class EditClassScreen extends StatefulWidget {
 }
 
 class _EditClassScreenState extends State<EditClassScreen> {
-  late TextEditingController nameController;
+  String? _selectedSubject;
   late TextEditingController teacherController;
   late TextEditingController roomController;
   late TextEditingController timeController;
@@ -19,11 +22,18 @@ class _EditClassScreenState extends State<EditClassScreen> {
   @override
   void initState() {
     super.initState();
-    // 初期値として、渡された Lesson の内容をコントローラーに設定する。
-    nameController = TextEditingController(text: widget.lesson.name);
+    _selectedSubject = widget.lesson.name;
     teacherController = TextEditingController(text: widget.lesson.teacher);
     roomController = TextEditingController(text: widget.lesson.room);
     timeController = TextEditingController(text: widget.lesson.time);
+  }
+
+  @override
+  void dispose() {
+    teacherController.dispose();
+    roomController.dispose();
+    timeController.dispose();
+    super.dispose();
   }
 
   int parseStartTime(String time) {
@@ -55,9 +65,12 @@ class _EditClassScreenState extends State<EditClassScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "授業名"),
+            SubjectDropdownField(
+              termId: LessonRepository.activeTermId,
+              initialValue: _selectedSubject,
+              onChanged: (subject) => setState(() {
+                _selectedSubject = subject;
+              }),
             ),
             TextField(
               controller: teacherController,
@@ -76,8 +89,14 @@ class _EditClassScreenState extends State<EditClassScreen> {
 
             ElevatedButton(
               onPressed: () {
+                if (_selectedSubject == null) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('科目を選択してください')));
+                  return;
+                }
                 final editedLesson = Lesson(
-                  name: nameController.text,
+                  name: _selectedSubject!,
                   teacher: teacherController.text,
                   room: roomController.text,
                   time: timeController.text,

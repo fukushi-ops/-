@@ -4,14 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../data/repository/lesson_repository.dart';
+import '../../data/repository/subject_repository.dart';
 import 'add_class_screen.dart';
 import 'edit_class_screen.dart';
 import 'lesson_data.dart';
+import '../../widgets/active_term_action.dart';
 import 'timetable_import_review_screen.dart';
 import 'timetable_ocr_service.dart';
 
 class ClassScreen extends StatefulWidget {
-  const ClassScreen({super.key});
+  const ClassScreen({super.key, required this.onTermSelected});
+
+  final Future<void> Function(int termId) onTermSelected;
 
   @override
   State<ClassScreen> createState() => _ClassScreenState();
@@ -36,6 +40,10 @@ class _ClassScreenState extends State<ClassScreen> {
       );
       if (lessons == null || lessons.isEmpty || !mounted) return;
 
+      await SubjectRepository.ensureRegistered(
+        termId: LessonRepository.activeTermId,
+        names: lessons.map((item) => item.lesson.name),
+      );
       final saved = await LessonRepository.addLessons(
         termId: LessonRepository.activeTermId,
         lessons: lessons,
@@ -88,6 +96,7 @@ class _ClassScreenState extends State<ClassScreen> {
         title: const Text('授業一覧'),
         centerTitle: true,
         actions: [
+          ActiveTermAction(onTermSelected: widget.onTermSelected),
           if (Platform.isAndroid)
             IconButton(
               onPressed: _importTimetable,
@@ -178,7 +187,9 @@ class _ClassScreenState extends State<ClassScreen> {
                                 lesson,
                               );
                             });
-                            final messenger = ScaffoldMessenger.maybeOf(context);
+                            final messenger = ScaffoldMessenger.maybeOf(
+                              context,
+                            );
                             messenger?.showSnackBar(
                               SnackBar(content: Text('授業の削除に失敗しました: $error')),
                             );
@@ -257,7 +268,9 @@ class _ClassScreenState extends State<ClassScreen> {
                                   });
                                 } on Exception catch (error) {
                                   if (!mounted) return;
-                                  final messenger = ScaffoldMessenger.maybeOf(context);
+                                  final messenger = ScaffoldMessenger.maybeOf(
+                                    context,
+                                  );
                                   messenger?.showSnackBar(
                                     SnackBar(
                                       content: Text('授業の更新に失敗しました: $error'),

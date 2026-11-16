@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../data/repository/lesson_repository.dart';
+import '../../widgets/subject_dropdown_field.dart';
 import 'lesson_data.dart';
 
 class AddClassScreen extends StatefulWidget {
@@ -9,10 +12,18 @@ class AddClassScreen extends StatefulWidget {
 }
 
 class _AddClassScreenState extends State<AddClassScreen> {
-  final nameController = TextEditingController();
+  String? _selectedSubject;
   final teacherController = TextEditingController();
   final roomController = TextEditingController();
   final timeController = TextEditingController();
+
+  @override
+  void dispose() {
+    teacherController.dispose();
+    roomController.dispose();
+    timeController.dispose();
+    super.dispose();
+  }
 
   int parseStartTime(String time) {
     final period = RegExp(r'^\s*(\d{1,2})\s*限').firstMatch(time);
@@ -45,8 +56,12 @@ class _AddClassScreenState extends State<AddClassScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("授業名"),
-            TextField(controller: nameController),
+            SubjectDropdownField(
+              termId: LessonRepository.activeTermId,
+              onChanged: (subject) => setState(() {
+                _selectedSubject = subject;
+              }),
+            ),
 
             const SizedBox(height: 20),
             const Text("先生"),
@@ -65,8 +80,14 @@ class _AddClassScreenState extends State<AddClassScreen> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  if (nameController.text.isEmpty ||
-                      teacherController.text.isEmpty ||
+                  final subject = _selectedSubject;
+                  if (subject == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('科目を選択してください')),
+                    );
+                    return;
+                  }
+                  if (teacherController.text.isEmpty ||
                       roomController.text.isEmpty ||
                       timeController.text.isEmpty) {
                     final messenger = ScaffoldMessenger.maybeOf(context);
@@ -76,9 +97,8 @@ class _AddClassScreenState extends State<AddClassScreen> {
                     return;
                   }
 
-                  //  Lesson を返す（ここが重要）
                   final newLesson = Lesson(
-                    name: nameController.text,
+                    name: subject,
                     teacher: teacherController.text,
                     room: roomController.text,
                     time: timeController.text,

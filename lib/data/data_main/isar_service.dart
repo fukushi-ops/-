@@ -15,6 +15,7 @@ class IsarService {
     _instance = await Isar.open([
       AcademicTermSchema,
       CourseEntitySchema,
+      SubjectEntitySchema,
       LessonEntitySchema,
       TaskEntitySchema,
       TaskArtifactEntitySchema,

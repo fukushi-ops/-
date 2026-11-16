@@ -20,6 +20,15 @@ class CourseEntity {
 }
 
 @collection
+class SubjectEntity {
+  Id id = Isar.autoIncrement;
+
+  @Index()
+  late int termId;
+  late String name;
+}
+
+@collection
 class LessonEntity {
   Id id = Isar.autoIncrement;
 

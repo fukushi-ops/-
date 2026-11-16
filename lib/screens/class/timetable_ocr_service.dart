@@ -24,6 +24,15 @@ class TimetableOcrService {
     }
   }
 
+  @visibleForTesting
+  static List<LessonImport> parseLinesForTesting(
+    List<({String text, Rect bounds})> lines,
+  ) {
+    return _parseLines([
+      for (final line in lines) _OcrLine(line.text.trim(), line.bounds),
+    ]);
+  }
+
   static List<LessonImport> _parseLines(List<_OcrLine> lines) {
     final headers = <String, _OcrLine>{};
     final weekdayPattern = RegExp(r'^[（(]?\s*([月火水木金土日])(?:曜日)?\s*[)）]?$');
@@ -44,11 +53,21 @@ class TimetableOcrService {
     final headerBottom = sortedHeaders
         .map((entry) => entry.value.bounds.bottom)
         .reduce(math.max);
+    final firstCenterX = sortedHeaders.first.value.centerX;
+    final secondCenterX = sortedHeaders[1].value.centerX;
+    final lastCenterX = sortedHeaders.last.value.centerX;
+    final previousCenterX =
+        sortedHeaders[sortedHeaders.length - 2].value.centerX;
+    final leftBoundary = firstCenterX - (secondCenterX - firstCenterX) / 2;
+    final rightBoundary = lastCenterX + (lastCenterX - previousCenterX) / 2;
+
     final periods = <({int number, double centerY})>[];
-    final periodPattern = RegExp(r'^\s*([1-9])\s*限(?:目)?\s*$');
+    final periodPattern = RegExp(r'^\s*([1-9])\s*(?:限(?:目)?)?\s*$');
     for (final line in lines) {
-      final match = periodPattern.firstMatch(line.text);
-      if (match != null) {
+      final match = line.centerX < leftBoundary
+          ? periodPattern.firstMatch(line.text)
+          : null;
+      if (line.bounds.top > headerBottom && match != null) {
         periods.add((
           number: int.parse(match.group(1)!),
           centerY: line.centerY,
@@ -65,13 +84,17 @@ class TimetableOcrService {
         continue;
       }
 
+      if (line.centerX < leftBoundary || line.centerX >= rightBoundary) {
+        continue;
+      }
+
       for (var index = 0; index < sortedHeaders.length; index++) {
         final centerX = sortedHeaders[index].value.centerX;
         final left = index == 0
-            ? double.negativeInfinity
+            ? leftBoundary
             : (sortedHeaders[index - 1].value.centerX + centerX) / 2;
         final right = index == sortedHeaders.length - 1
-            ? double.infinity
+            ? rightBoundary
             : (centerX + sortedHeaders[index + 1].value.centerX) / 2;
         if (line.centerX >= left && line.centerX < right) {
           cellLines.add((weekday: sortedHeaders[index].key, line: line));
@@ -90,6 +113,10 @@ class TimetableOcrService {
     final cells = <(String, int), List<String>>{};
     for (final cell in cellLines) {
       final rowIndex = _nearestRow(cell.line.centerY, rowCenters);
+      if (periods.length > 1 &&
+          !_isWithinPeriodRow(cell.line.centerY, rowIndex, rowCenters)) {
+        continue;
+      }
       cells.putIfAbsent((cell.weekday, rowIndex), () => []).add(cell.line.text);
     }
 
@@ -124,6 +151,27 @@ class TimetableOcrService {
           : a.lesson.startTime.compareTo(b.lesson.startTime);
     });
     return imports;
+  }
+
+  static bool _isWithinPeriodRow(
+    double centerY,
+    int rowIndex,
+    List<double> rowCenters,
+  ) {
+    var halfRowHeight = double.infinity;
+    if (rowIndex > 0) {
+      halfRowHeight = math.min(
+        halfRowHeight,
+        (rowCenters[rowIndex] - rowCenters[rowIndex - 1]).abs() / 2,
+      );
+    }
+    if (rowIndex < rowCenters.length - 1) {
+      halfRowHeight = math.min(
+        halfRowHeight,
+        (rowCenters[rowIndex + 1] - rowCenters[rowIndex]).abs() / 2,
+      );
+    }
+    return (centerY - rowCenters[rowIndex]).abs() < halfRowHeight;
   }
 
   static List<double> _clusterRows(List<_OcrLine> lines) {

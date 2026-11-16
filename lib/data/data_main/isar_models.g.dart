@@ -1242,6 +1242,678 @@ extension CourseEntityQueryProperty
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types, experimental_member_use
 
+extension GetSubjectEntityCollection on Isar {
+  IsarCollection<SubjectEntity> get subjectEntitys => this.collection();
+}
+
+const SubjectEntitySchema = CollectionSchema(
+  name: r'SubjectEntity',
+  id: 7370011932666232649,
+  properties: {
+    r'name': PropertySchema(id: 0, name: r'name', type: IsarType.string),
+    r'termId': PropertySchema(id: 1, name: r'termId', type: IsarType.long),
+  },
+
+  estimateSize: _subjectEntityEstimateSize,
+  serialize: _subjectEntitySerialize,
+  deserialize: _subjectEntityDeserialize,
+  deserializeProp: _subjectEntityDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'termId': IndexSchema(
+      id: 88143803320538906,
+      name: r'termId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'termId',
+          type: IndexType.value,
+          caseSensitive: false,
+        ),
+      ],
+    ),
+  },
+  links: {},
+  embeddedSchemas: {},
+
+  getId: _subjectEntityGetId,
+  getLinks: _subjectEntityGetLinks,
+  attach: _subjectEntityAttach,
+  version: '3.4.1',
+);
+
+int _subjectEntityEstimateSize(
+  SubjectEntity object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.name.length * 3;
+  return bytesCount;
+}
+
+void _subjectEntitySerialize(
+  SubjectEntity object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeString(offsets[0], object.name);
+  writer.writeLong(offsets[1], object.termId);
+}
+
+SubjectEntity _subjectEntityDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = SubjectEntity();
+  object.id = id;
+  object.name = reader.readString(offsets[0]);
+  object.termId = reader.readLong(offsets[1]);
+  return object;
+}
+
+P _subjectEntityDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readLong(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _subjectEntityGetId(SubjectEntity object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _subjectEntityGetLinks(SubjectEntity object) {
+  return [];
+}
+
+void _subjectEntityAttach(
+  IsarCollection<dynamic> col,
+  Id id,
+  SubjectEntity object,
+) {
+  object.id = id;
+}
+
+extension SubjectEntityQueryWhereSort
+    on QueryBuilder<SubjectEntity, SubjectEntity, QWhere> {
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhere> anyTermId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'termId'),
+      );
+    });
+  }
+}
+
+extension SubjectEntityQueryWhere
+    on QueryBuilder<SubjectEntity, SubjectEntity, QWhereClause> {
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause> idEqualTo(
+    Id id,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause> idNotEqualTo(
+    Id id,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause> idGreaterThan(
+    Id id, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause> idLessThan(
+    Id id, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause> termIdEqualTo(
+    int termId,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'termId', value: [termId]),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause>
+  termIdNotEqualTo(int termId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'termId',
+                lower: [],
+                upper: [termId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'termId',
+                lower: [termId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'termId',
+                lower: [termId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'termId',
+                lower: [],
+                upper: [termId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause>
+  termIdGreaterThan(int termId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'termId',
+          lower: [termId],
+          includeLower: include,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause> termIdLessThan(
+    int termId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'termId',
+          lower: [],
+          upper: [termId],
+          includeUpper: include,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterWhereClause> termIdBetween(
+    int lowerTermId,
+    int upperTermId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'termId',
+          lower: [lowerTermId],
+          includeLower: includeLower,
+          upper: [upperTermId],
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+}
+
+extension SubjectEntityQueryFilter
+    on QueryBuilder<SubjectEntity, SubjectEntity, QFilterCondition> {
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition> idEqualTo(
+    Id value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  idGreaterThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition> nameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  nameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  nameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition> nameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'name',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  nameStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  nameEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  nameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition> nameMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'name',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  nameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  nameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  termIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'termId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  termIdGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'termId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  termIdLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'termId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterFilterCondition>
+  termIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'termId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+}
+
+extension SubjectEntityQueryObject
+    on QueryBuilder<SubjectEntity, SubjectEntity, QFilterCondition> {}
+
+extension SubjectEntityQueryLinks
+    on QueryBuilder<SubjectEntity, SubjectEntity, QFilterCondition> {}
+
+extension SubjectEntityQuerySortBy
+    on QueryBuilder<SubjectEntity, SubjectEntity, QSortBy> {
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> sortByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> sortByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> sortByTermId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'termId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> sortByTermIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'termId', Sort.desc);
+    });
+  }
+}
+
+extension SubjectEntityQuerySortThenBy
+    on QueryBuilder<SubjectEntity, SubjectEntity, QSortThenBy> {
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> thenByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> thenByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> thenByTermId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'termId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QAfterSortBy> thenByTermIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'termId', Sort.desc);
+    });
+  }
+}
+
+extension SubjectEntityQueryWhereDistinct
+    on QueryBuilder<SubjectEntity, SubjectEntity, QDistinct> {
+  QueryBuilder<SubjectEntity, SubjectEntity, QDistinct> distinctByName({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<SubjectEntity, SubjectEntity, QDistinct> distinctByTermId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'termId');
+    });
+  }
+}
+
+extension SubjectEntityQueryProperty
+    on QueryBuilder<SubjectEntity, SubjectEntity, QQueryProperty> {
+  QueryBuilder<SubjectEntity, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<SubjectEntity, String, QQueryOperations> nameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<SubjectEntity, int, QQueryOperations> termIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'termId');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types, experimental_member_use
+
 extension GetLessonEntityCollection on Isar {
   IsarCollection<LessonEntity> get lessonEntitys => this.collection();
 }
