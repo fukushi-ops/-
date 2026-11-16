@@ -55,4 +55,46 @@ void main() {
     expect(find.text('英語　通常の課題'), findsNothing);
     expect(find.text('歴史　提出済みの重要課題'), findsNothing);
   });
+
+  testWidgets('今週の課題欄に完了課題と未完了課題を表示する', (tester) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final now = DateTime.now();
+    final weekStart = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: now.weekday - 1));
+    final deadline = weekStart.add(const Duration(days: 2)).toIso8601String();
+    TaskData.tasks = [
+      Task(title: '完了レポート', subject: '数学', deadline: deadline, isDone: true),
+      Task(title: '未完了レポート', subject: '英語', deadline: deadline),
+      Task(
+        title: '来週の課題',
+        subject: '情報',
+        deadline: weekStart.add(const Duration(days: 8)).toIso8601String(),
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeScreen(
+          userName: 'テスト',
+          onSelectTab: (_) {},
+          onTermSelected: (_) async {},
+          refreshToken: 0,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('完了した課題 (1)'), findsOneWidget);
+    expect(find.text('未完了の課題 (1)'), findsOneWidget);
+    expect(find.text('完了レポート'), findsOneWidget);
+    expect(find.text('未完了レポート'), findsOneWidget);
+    expect(find.text('来週の課題'), findsNothing);
+  });
 }

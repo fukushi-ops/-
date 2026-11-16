@@ -358,6 +358,13 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       ),
       floatingActionButton: MediaQuery.viewInsetsOf(context).bottom > 0
           ? null
+          : MediaQuery.sizeOf(context).width < 600
+          ? FloatingActionButton(
+              heroTag: 'addTaskFab',
+              tooltip: '課題を追加',
+              onPressed: _addTask,
+              child: const Icon(Icons.add),
+            )
           : FloatingActionButton.extended(
               heroTag: 'addTaskFab',
               onPressed: _addTask,
@@ -505,20 +512,33 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
   Widget _buildTaskCard(BuildContext context, Task task) {
     final theme = Theme.of(context);
-    final dueDate = DateTime.tryParse(task.deadline);
+    final dueDate = DateTime.tryParse(task.deadline.trim());
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dueDay = dueDate == null
         ? null
         : DateTime(dueDate.year, dueDate.month, dueDate.day);
     final daysLeft = dueDay?.difference(today).inDays;
-    final isOverdue = !task.isDone && daysLeft != null && daysLeft < 0;
-    final isDueToday = !task.isDone && daysLeft == 0;
-    final statusColor = task.isDone
-        ? Colors.teal
-        : isOverdue || isDueToday
+    final countdownLabel = daysLeft == null
+        ? null
+        : daysLeft < 0
+        ? '期限超過${daysLeft.abs()}日'
+        : daysLeft == 0
+        ? '今日が締切'
+        : 'あと$daysLeft日';
+    final countdownColor = daysLeft == null
+        ? Colors.blueGrey.shade700
+        : daysLeft < 0
+        ? Colors.red.shade700
+        : daysLeft <= 7
         ? Colors.deepOrange
-        : theme.colorScheme.primary;
+        : Colors.blueGrey.shade700;
+    final progress = task.progress.clamp(0, 100);
+    final progressColor = progress <= 30
+        ? Colors.red.shade700
+        : progress < 70
+        ? Colors.amber.shade800
+        : Colors.green.shade700;
     return Dismissible(
       key: ValueKey(task.id ?? task),
       direction: DismissDirection.endToStart,
@@ -553,6 +573,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       },
       onDismissed: (_) => setState(() => TaskData.removeTask(task)),
       child: Card(
+        key: ValueKey('taskCard-${task.title}'),
         margin: const EdgeInsets.only(bottom: 12),
         elevation: 0,
         color: theme.colorScheme.surface,
@@ -564,7 +585,12 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         child: InkWell(
           onTap: () => _openDetails(task),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              task.isDone ? 6 : 14,
+              12,
+              task.isDone ? 6 : 14,
+            ),
             child: Row(
               children: [
                 Checkbox(
@@ -579,102 +605,121 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              task.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                decoration: task.isDone
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                                color: task.isDone ? theme.hintColor : null,
+                  child: task.isDone
+                      ? Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                task.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.lineThrough,
+                                  color: theme.hintColor,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          _StatusBadge(
-                            label: '優先度${_priorityLabel(task.priority)}',
-                            color: _priorityColor(task.priority),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            task.subject,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          if (task.isDone)
+                            const SizedBox(width: 8),
                             const _StatusBadge(
                               label: '提出済み',
                               color: Colors.teal,
-                            )
-                          else if (isOverdue || isDueToday)
-                            _StatusBadge(
-                              label: isOverdue ? '期限切れ' : '今日が締切',
-                              color: Colors.deepOrange,
+                              icon: Icons.check,
                             ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.event_outlined,
-                            size: 16,
-                            color: statusColor,
-                          ),
-                          const SizedBox(width: 5),
-                          Expanded(
-                            child: Text(
-                              '締切 ${task.deadline}',
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    task.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                _StatusBadge(
+                                  label: _priorityLabel(task.priority),
+                                  color: _priorityColor(task.priority),
+                                  filled: true,
+                                  icon: Icons.flag_rounded,
+                                  textColor: _priorityTextColor(task.priority),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              task.subject,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: statusColor,
+                                color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
-                          if (!task.isDone && daysLeft != null && daysLeft > 0)
-                            Text(
-                              'あと$daysLeft日',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.hintColor,
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                if (countdownLabel != null)
+                                  _StatusBadge(
+                                    label: countdownLabel,
+                                    color: countdownColor,
+                                    filled: true,
+                                    icon: Icons.schedule,
+                                  ),
+                                const Spacer(),
+                                Text(
+                                  dueDate == null
+                                      ? task.deadline.trim().isEmpty
+                                            ? '締切未設定'
+                                            : '締切 ${task.deadline}'
+                                      : '締切 ${dueDate.month}/${dueDate.day}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Text(
+                                  '進捗',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  '$progress%',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: progressColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                value: progress / 100,
+                                minHeight: 8,
+                                backgroundColor:
+                                    theme.colorScheme.surfaceContainerHighest,
+                                valueColor: AlwaysStoppedAnimation(
+                                  progressColor,
+                                ),
                               ),
                             ),
-                        ],
-                      ),
-                      if (task.progress > 0 && !task.isDone) ...[
-                        const SizedBox(height: 8),
-                        LinearProgressIndicator(
-                          value: task.progress.clamp(0, 100) / 100,
-                          minHeight: 4,
-                          borderRadius: BorderRadius.circular(4),
+                          ],
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '進捗 ${task.progress.clamp(0, 100)}%',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.hintColor,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
                 ),
                 PopupMenuButton<String>(
                   tooltip: '課題の操作',
@@ -716,10 +761,13 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   };
 
   Color _priorityColor(int priority) => switch (priority) {
-    1 => Colors.deepOrange,
-    3 => Colors.blueGrey,
-    _ => Colors.indigo,
+    1 => Colors.red.shade700,
+    3 => Colors.blue.shade700,
+    _ => Colors.amber.shade700,
   };
+
+  Color _priorityTextColor(int priority) =>
+      priority == 2 ? Colors.black87 : Colors.white;
 
   Future<void> _addTask() async {
     final result = await Navigator.push<Task>(
@@ -884,26 +932,45 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label, required this.color});
+  const _StatusBadge({
+    required this.label,
+    required this.color,
+    this.filled = false,
+    this.icon,
+    this.textColor,
+  });
 
   final String label;
   final Color color;
+  final bool filled;
+  final IconData? icon;
+  final Color? textColor;
 
   @override
   Widget build(BuildContext context) {
+    final foregroundColor = filled ? textColor ?? Colors.white : color;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: filled ? color : color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 13, color: foregroundColor),
+            const SizedBox(width: 3),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              color: foregroundColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

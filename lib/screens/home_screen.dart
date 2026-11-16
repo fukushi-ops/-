@@ -88,19 +88,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final weeklyTasks = TaskData.tasks.where((task) {
       final deadline = DateTime.tryParse(task.deadline.trim());
-
       return deadline != null &&
           !deadline.isBefore(weekStart) &&
           deadline.isBefore(weekEnd);
-    }).toList();
+    }).toList()..sort((a, b) {
+      final aDeadline = DateTime.tryParse(a.deadline.trim());
+      final bDeadline = DateTime.tryParse(b.deadline.trim());
+      if (aDeadline == null) return bDeadline == null ? 0 : 1;
+      if (bDeadline == null) return -1;
+      return aDeadline.compareTo(bDeadline);
+    });
 
     final completedWeeklyTasks = weeklyTasks
         .where((task) => task.isDone)
-        .length;
+        .toList();
+    final pendingWeeklyTasks = weeklyTasks
+        .where((task) => !task.isDone)
+        .toList();
 
     final weeklyProgress = weeklyTasks.isEmpty
         ? 0.0
-        : completedWeeklyTasks / weeklyTasks.length;
+        : completedWeeklyTasks.length / weeklyTasks.length;
 
     final lessons = List<Lesson>.from(
       LessonData.lessonsByDay[today] ?? const <Lesson>[],
@@ -433,7 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         Text(
-                          '$completedWeeklyTasks / ${weeklyTasks.length}件',
+                          '${completedWeeklyTasks.length} / ${weeklyTasks.length}件',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -469,6 +477,28 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    if (weeklyTasks.isEmpty)
+                      Text(
+                        '今週締切の課題はありません',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      )
+                    else ...[
+                      if (completedWeeklyTasks.isNotEmpty)
+                        _WeeklyTaskGroup(
+                          title: '完了した課題',
+                          tasks: completedWeeklyTasks,
+                          color: Colors.teal,
+                          icon: Icons.check_circle_outline,
+                        ),
+                      if (pendingWeeklyTasks.isNotEmpty)
+                        _WeeklyTaskGroup(
+                          title: '未完了の課題',
+                          tasks: pendingWeeklyTasks,
+                          color: Colors.deepOrange,
+                          icon: Icons.radio_button_unchecked,
+                        ),
+                    ],
                   ],
                 ),
               ),
@@ -477,6 +507,74 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WeeklyTaskGroup extends StatelessWidget {
+  const _WeeklyTaskGroup({
+    required this.title,
+    required this.tasks,
+    required this.color,
+    required this.icon,
+  });
+
+  final String title;
+  final List<Task> tasks;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 6),
+              Text(
+                '$title (${tasks.length})',
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ...tasks.map((task) {
+            final deadline = DateTime.tryParse(task.deadline.trim());
+            final deadlineLabel = deadline == null
+                ? '締切未設定'
+                : '${deadline.month}月${deadline.day}日締切';
+            return Padding(
+              padding: const EdgeInsets.only(left: 24, bottom: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    '${task.subject}・$deadlineLabel',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).hintColor,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

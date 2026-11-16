@@ -146,6 +146,70 @@ void main() {
     expect(find.text('英語課題'), findsOneWidget);
   });
 
+  testWidgets('未提出は締切・進捗を強調し、提出済みはコンパクトに表示する', (tester) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final today = DateUtils.dateOnly(DateTime.now());
+    final deadline = today.add(const Duration(days: 6));
+    TaskData.tasks = [
+      Task(
+        title: '進捗確認',
+        subject: '情報',
+        deadline: deadline.toIso8601String(),
+        priority: 1,
+        progress: 50,
+      ),
+      Task(
+        title: '完了済み',
+        subject: '非表示科目',
+        deadline: deadline.toIso8601String(),
+        isDone: true,
+        progress: 100,
+      ),
+    ];
+
+    await tester.pumpWidget(const MaterialApp(home: AssignmentScreen()));
+    await tester.pumpAndSettle();
+
+    final pendingCard = find.byKey(const ValueKey('taskCard-進捗確認'));
+    final completedCard = find.byKey(const ValueKey('taskCard-完了済み'));
+    expect(find.text('あと6日'), findsOneWidget);
+    expect(find.text('締切 ${deadline.month}/${deadline.day}'), findsOneWidget);
+    expect(find.text('50%'), findsOneWidget);
+    expect(
+      find.descendant(of: completedCard, matching: find.text('非表示科目')),
+      findsNothing,
+    );
+    expect(
+      tester.getSize(completedCard).height,
+      lessThan(tester.getSize(pendingCard).height / 2),
+    );
+    final progressBar = tester.widget<LinearProgressIndicator>(
+      find.descendant(
+        of: pendingCard,
+        matching: find.byType(LinearProgressIndicator),
+      ),
+    );
+    expect(progressBar.minHeight, 8);
+    expect(progressBar.valueColor?.value, Colors.amber.shade800);
+  });
+
+  testWidgets('スマホ幅では課題追加をアイコンのみのFABで表示する', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const MaterialApp(home: AssignmentScreen()));
+
+    expect(find.byTooltip('課題を追加'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.text('課題を追加'), findsNothing);
+  });
+
   testWidgets('キーボード表示中に画面がオーバーフローしない', (tester) async {
     tester.view.physicalSize = const Size(480, 800);
     tester.view.devicePixelRatio = 1;
