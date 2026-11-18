@@ -9,6 +9,7 @@ import 'data/data_main/isar_service.dart';
 import 'data/repository/lesson_repository.dart';
 import 'data/repository/subject_repository.dart';
 import 'data/repository/task_repository.dart';
+import 'services/home_widget_service.dart';
 import 'services/simple_notification_service.dart';
 
 void main() async {
@@ -39,6 +40,7 @@ Future<void> _initializeApp() async {
   await NotificationService.syncTaskDeadlineNotifications(TaskData.tasks);
   TaskData.notifyChanged();
   await AttendanceStorage.load();
+  HomeWidgetService.refreshInBackground();
 }
 
 class MyApp extends StatelessWidget {

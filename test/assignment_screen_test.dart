@@ -50,6 +50,7 @@ void main() {
     expect(find.text('作業メモ'), findsNothing);
     expect(find.text('成果物'), findsNothing);
     expect(find.text('振り返り'), findsNothing);
+    expect(find.text('提出済みにする'), findsOneWidget);
   });
 
   testWidgets('提出済みの課題詳細で成果物・振り返りを表示し、難易度を数字で選べる', (tester) async {
@@ -74,6 +75,7 @@ void main() {
 
     expect(find.text('成果物'), findsOneWidget);
     expect(find.text('振り返り'), findsOneWidget);
+    expect(find.text('未提出に戻す'), findsNothing);
     await tester.tap(find.text('振り返りを追加'));
     await tester.pumpAndSettle();
 
@@ -238,7 +240,7 @@ void main() {
         subject: '情報',
         deadline: '2026-11-20',
         reflectionScore: 2,
-        reflectionDifficulty: '難しい',
+        reflectionDifficulty: '2',
         reflectionLearned: '保存方法を学んだ',
       ),
       Task(
@@ -246,14 +248,14 @@ void main() {
         subject: '情報',
         deadline: '2026-11-21',
         reflectionScore: 4,
-        reflectionDifficulty: '難しい',
+        reflectionDifficulty: '5',
       ),
       Task(
         title: '基礎練習',
         subject: '情報',
         deadline: '2026-11-22',
         reflectionScore: 2,
-        reflectionDifficulty: '簡単',
+        reflectionDifficulty: '3',
       ),
     ];
 
@@ -274,9 +276,14 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('3以下').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    await tester.tap(find.byType(DropdownButtonFormField<int>).last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('難しい').last);
+    expect(find.text('5以下'), findsOneWidget);
+    expect(find.text('4以下'), findsOneWidget);
+    expect(find.text('3以下'), findsNWidgets(2));
+    expect(find.text('2以下'), findsOneWidget);
+    expect(find.text('1以下'), findsOneWidget);
+    await tester.tap(find.text('2以下').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('この条件で絞り込む'));
     await tester.pumpAndSettle();

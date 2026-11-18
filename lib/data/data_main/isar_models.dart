@@ -58,6 +58,10 @@ class TaskEntity {
   int progress = 0;
   String workMemo = '';
   String checklistJson = '[]';
+  String deadlineReminderDaysJson = '[3]';
+  String deadlineReminderFrequency = 'daily';
+  int? deadlineReminderHour;
+  int? deadlineReminderMinute;
 
   int? reflectionScore;
   String? reflectionDifficulty;

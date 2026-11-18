@@ -48,38 +48,27 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 label: '提出状況',
                 value: widget.task.isDone ? '提出済み' : '未提出',
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isUpdatingStatus
-                        ? null
-                        : _toggleSubmissionStatus,
-                    icon: _isUpdatingStatus
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            widget.task.isDone
-                                ? Icons.undo
-                                : Icons.check_circle_outline,
-                          ),
-                    label: Text(
-                      _isUpdatingStatus
-                          ? '保存中...'
-                          : widget.task.isDone
-                          ? '未提出に戻す'
-                          : '提出済みにする',
+              if (!widget.task.isDone)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isUpdatingStatus ? null : _markAsSubmitted,
+                      icon: _isUpdatingStatus
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check_circle_outline),
+                      label: Text(_isUpdatingStatus ? '保存中...' : '提出済みにする'),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -183,7 +172,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   if ((widget.task.reflectionDifficulty ?? '').isNotEmpty)
                     _DetailItem(
                       label: '難易度',
-                      value: _difficultyLabel(widget.task.reflectionDifficulty!),
+                      value: _difficultyLabel(
+                        widget.task.reflectionDifficulty!,
+                      ),
                     ),
                   if ((widget.task.reflectionLearned ?? '').isNotEmpty)
                     _DetailItem(
@@ -478,23 +469,21 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
-  Future<void> _toggleSubmissionStatus() async {
-    final newStatus = !widget.task.isDone;
-
+  Future<void> _markAsSubmitted() async {
     setState(() {
       _isUpdatingStatus = true;
     });
 
     try {
-      await TaskRepository.updateIsDone(task: widget.task, isDone: newStatus);
+      await TaskRepository.updateIsDone(task: widget.task, isDone: true);
 
       if (!mounted) return;
 
       setState(() {
-        widget.task.isDone = newStatus;
+        widget.task.isDone = true;
         _isUpdatingStatus = false;
       });
-      if (newStatus) await _loadArtifact();
+      await _loadArtifact();
       await _updateDeadlineReminder();
     } catch (error) {
       if (!mounted) return;

@@ -28,6 +28,14 @@ class TaskRepository {
             progress: entity.progress.clamp(0, 100),
             workMemo: entity.workMemo,
             checklist: _decodeChecklist(entity.checklistJson),
+            deadlineReminderDaysBefore: _decodeReminderDays(
+              entity.deadlineReminderDaysJson,
+            ),
+            deadlineReminderFrequency: _decodeReminderFrequency(
+              entity.deadlineReminderFrequency,
+            ),
+            deadlineReminderHour: entity.deadlineReminderHour ?? 9,
+            deadlineReminderMinute: entity.deadlineReminderMinute ?? 0,
             reflectionScore: entity.reflectionScore,
             reflectionDifficulty: entity.reflectionDifficulty,
             reflectionLearned: entity.reflectionLearned,
@@ -50,6 +58,12 @@ class TaskRepository {
       ..progress = task.progress
       ..workMemo = task.workMemo
       ..checklistJson = _encodeChecklist(task.checklist)
+      ..deadlineReminderDaysJson = _encodeReminderDays(
+        task.deadlineReminderDaysBefore,
+      )
+      ..deadlineReminderFrequency = task.deadlineReminderFrequency.name
+      ..deadlineReminderHour = task.deadlineReminderHour
+      ..deadlineReminderMinute = task.deadlineReminderMinute
       ..reflectionScore = task.reflectionScore
       ..reflectionDifficulty = task.reflectionDifficulty
       ..reflectionLearned = task.reflectionLearned
@@ -68,6 +82,14 @@ class TaskRepository {
       progress: entity.progress,
       workMemo: entity.workMemo,
       checklist: _decodeChecklist(entity.checklistJson),
+      deadlineReminderDaysBefore: _decodeReminderDays(
+        entity.deadlineReminderDaysJson,
+      ),
+      deadlineReminderFrequency: _decodeReminderFrequency(
+        entity.deadlineReminderFrequency,
+      ),
+      deadlineReminderHour: entity.deadlineReminderHour ?? 9,
+      deadlineReminderMinute: entity.deadlineReminderMinute ?? 0,
       reflectionScore: entity.reflectionScore,
       reflectionDifficulty: entity.reflectionDifficulty,
       reflectionLearned: entity.reflectionLearned,
@@ -96,6 +118,12 @@ class TaskRepository {
         ..progress = task.progress
         ..workMemo = task.workMemo
         ..checklistJson = _encodeChecklist(task.checklist)
+        ..deadlineReminderDaysJson = _encodeReminderDays(
+          task.deadlineReminderDaysBefore,
+        )
+        ..deadlineReminderFrequency = task.deadlineReminderFrequency.name
+        ..deadlineReminderHour = task.deadlineReminderHour
+        ..deadlineReminderMinute = task.deadlineReminderMinute
         ..reflectionScore = task.reflectionScore
         ..reflectionDifficulty = task.reflectionDifficulty
         ..reflectionLearned = task.reflectionLearned
@@ -127,6 +155,29 @@ class TaskRepository {
         isDone: item['isDone'] as bool,
       );
     }).toList();
+  }
+
+  static String _encodeReminderDays(List<int> days) => jsonEncode(days);
+
+  static List<int> _decodeReminderDays(String encoded) {
+    if (encoded.isEmpty) return const [3];
+    final decoded = jsonDecode(encoded);
+    if (decoded is! List ||
+        decoded.any(
+          (day) =>
+              day is! int || day < 1 || day > maxTaskReminderDaysBeforeDeadline,
+        )) {
+      throw const FormatException('課題通知日の形式が正しくありません。');
+    }
+    return decoded.cast<int>().toSet().toList()..sort();
+  }
+
+  static TaskReminderFrequency _decodeReminderFrequency(String encoded) {
+    if (encoded.isEmpty) return TaskReminderFrequency.daily;
+    for (final frequency in TaskReminderFrequency.values) {
+      if (frequency.name == encoded) return frequency;
+    }
+    throw const FormatException('課題通知の繰り返し設定が正しくありません。');
   }
 
   static Future<void> delete(Task task) async {

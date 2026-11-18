@@ -23,7 +23,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   int _statusFilter = 0;
   String _subjectFilter = 'すべて';
   int _maxScoreFilter = 0;
-  String _difficultyFilter = 'すべて';
+  int _maxDifficultyFilter = 0;
   String _deadlineFilter = 'すべて';
 
   @override
@@ -88,9 +88,11 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
             task.reflectionScore! > _maxScoreFilter)) {
       return false;
     }
-    if (_difficultyFilter != 'すべて' &&
-        task.reflectionDifficulty?.trim() != _difficultyFilter) {
-      return false;
+    if (_maxDifficultyFilter > 0) {
+      final difficulty = int.tryParse(task.reflectionDifficulty?.trim() ?? '');
+      if (difficulty == null || difficulty > _maxDifficultyFilter) {
+        return false;
+      }
     }
 
     if (_deadlineFilter != 'すべて') {
@@ -125,24 +127,9 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       ..sort(),
   ];
 
-  List<String> get _difficulties => [
-    'すべて',
-    ...TaskData.tasks
-        .map((task) => task.reflectionDifficulty?.trim() ?? '')
-        .where((difficulty) => difficulty.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort(),
-  ];
-
-  String _difficultyLabel(String value) {
-    final level = int.tryParse(value);
-    return level == null ? value : '$level / 5';
-  }
-
   int get _activeFilterCount =>
       (_maxScoreFilter > 0 ? 1 : 0) +
-      (_difficultyFilter != 'すべて' ? 1 : 0) +
+      (_maxDifficultyFilter > 0 ? 1 : 0) +
       (_deadlineFilter != 'すべて' ? 1 : 0);
 
   @override
@@ -380,17 +367,16 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       _statusFilter = 0;
       _subjectFilter = 'すべて';
       _maxScoreFilter = 0;
-      _difficultyFilter = 'すべて';
+      _maxDifficultyFilter = 0;
       _deadlineFilter = 'すべて';
     });
   }
 
   Future<void> _openAdvancedFilters() async {
     var maxScore = _maxScoreFilter;
-    var difficulty = _difficultyFilter;
+    var maxDifficulty = _maxDifficultyFilter;
     var deadline = _deadlineFilter;
-    final difficulties = _difficulties;
-    final result = await showModalBottomSheet<(int, String, String)>(
+    final result = await showModalBottomSheet<(int, int, String)>(
       context: context,
       isScrollControlled: true,
       builder: (context) => StatefulBuilder(
@@ -433,28 +419,25 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                   },
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: difficulties.contains(difficulty)
-                      ? difficulty
-                      : 'すべて',
+                DropdownButtonFormField<int>(
+                  initialValue: maxDifficulty,
                   decoration: const InputDecoration(
                     labelText: '難易度',
                     border: OutlineInputBorder(),
                   ),
-                  items: difficulties
-                      .map(
-                        (value) => DropdownMenuItem(
-                          value: value,
-                          child: Text(
-                            value == 'すべて'
-                                ? '指定なし'
-                                : _difficultyLabel(value),
-                          ),
-                        ),
-                      )
-                      .toList(),
+                  items: [
+                    const DropdownMenuItem(value: 0, child: Text('指定なし')),
+                    ...List.generate(5, (index) => 5 - index).map(
+                      (level) => DropdownMenuItem(
+                        value: level,
+                        child: Text('$level以下'),
+                      ),
+                    ),
+                  ],
                   onChanged: (value) {
-                    if (value != null) setSheetState(() => difficulty = value);
+                    if (value != null) {
+                      setSheetState(() => maxDifficulty = value);
+                    }
                   },
                 ),
                 const SizedBox(height: 12),
@@ -480,7 +463,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                     TextButton(
                       onPressed: () => setSheetState(() {
                         maxScore = 0;
-                        difficulty = 'すべて';
+                        maxDifficulty = 0;
                         deadline = 'すべて';
                       }),
                       child: const Text('条件をリセット'),
@@ -489,7 +472,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                     FilledButton(
                       onPressed: () => Navigator.pop(context, (
                         maxScore,
-                        difficulty,
+                        maxDifficulty,
                         deadline,
                       )),
                       child: const Text('この条件で絞り込む'),
@@ -505,7 +488,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
     if (result == null || !mounted) return;
     setState(() {
       _maxScoreFilter = result.$1;
-      _difficultyFilter = result.$2;
+      _maxDifficultyFilter = result.$2;
       _deadlineFilter = result.$3;
     });
   }
@@ -640,9 +623,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -838,12 +819,36 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         task.isDone = isDone;
         TaskData.notifyChanged();
       });
-      await _updateDeadlineReminder(task);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('提出状況の更新に失敗しました。$error')));
+      return;
+    }
+
+    await _updateDeadlineReminder(task);
+    if (!isDone || !mounted) return;
+
+    final shouldOpenDetails = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('課題の提出を記録しました'),
+        content: const Text('成果物と振り返りを登録しませんか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('あとで'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('登録する'),
+          ),
+        ],
+      ),
+    );
+    if (shouldOpenDetails == true && mounted) {
+      await _openDetails(task);
     }
   }
 

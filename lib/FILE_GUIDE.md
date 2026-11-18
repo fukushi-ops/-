@@ -17,9 +17,10 @@
 | [`screens/term/term_management_screen.dart`](screens/term/term_management_screen.dart) | 任意の学年・学期名を作成・切り替え、既存データを新しい期間へ移すか選択する。 |
 | [`screens/class/add_class_screen.dart`](screens/class/add_class_screen.dart) | 登録済み科目を選び、先生・教室・時間を入力して授業を追加する。 |
 | [`screens/class/edit_class_screen.dart`](screens/class/edit_class_screen.dart) | 登録済み科目から選び、授業情報を編集する。 |
-| [`screens/task/assignment_screen.dart`](screens/task/assignment_screen.dart) | 課題一覧を表示し、未提出・提出済みの絞り込み、提出状態の変更、削除を行う。 |
-| [`screens/task/add_assignment_screen.dart`](screens/task/add_assignment_screen.dart) | 課題名・登録済み科目・締切を指定して課題を追加する。 |
-| [`screens/task/edit_assignument_screen.dart`](screens/task/edit_assignument_screen.dart) | 課題情報を編集し、登録済み科目を選択する。 |
+| [`screens/task/assignment_screen.dart`](screens/task/assignment_screen.dart) | 課題一覧を表示し、未提出・提出済みの絞り込み、提出状態の変更、削除を行う。提出済みにしたときは、成果物・振り返りの登録を課題詳細から行うよう案内する。 |
+| [`screens/task/add_assignment_screen.dart`](screens/task/add_assignment_screen.dart) | 課題名・登録済み科目・締切と、課題ごとの締切通知設定を指定して課題を追加する。 |
+| [`screens/task/edit_assignument_screen.dart`](screens/task/edit_assignument_screen.dart) | 課題情報と、課題ごとの締切通知設定を編集する。 |
+| [`screens/task/task_deadline_notification_form.dart`](screens/task/task_deadline_notification_form.dart) | 1日前・3日前・カスタム日数、繰り返し頻度、通知時刻を設定する共通フォーム。 |
 | [`screens/task/learning_history_screen.dart`](screens/task/learning_history_screen.dart) | 課題の統計、自己評価の推移、科目別集計を表示する。個別の課題一覧は表示しない。 |
 | [`screens/subject/subject_registration_screen.dart`](screens/subject/subject_registration_screen.dart) | 科目を登録し、登録済みの科目一覧を表示する。 |
 | [`screens/sub/attendance_screen.dart`](screens/sub/attendance_screen.dart) | 日付ごと・授業ごとに出席、欠席、遅刻、公欠を記録する画面。 |
@@ -36,7 +37,9 @@
 | [`data/repository/lesson_repository.dart`](data/repository/lesson_repository.dart) | 期間の作成・選択と、期間ごとの授業の保存・読み込みを行う。 |
 | [`widgets/subject_dropdown_field.dart`](widgets/subject_dropdown_field.dart) | 授業・課題フォームで登録済み科目を選択する共通フィールド。 |
 | [`screens/lesson_data.dart`](screens/lesson_data.dart) | 授業データの形式（`Lesson`）、曜日ごとの授業リスト、および `SharedPreferences` への保存・読み込みを定義する。 |
-| [`screens/task_data.dart`](screens/task_data.dart) | 課題データの形式（`Task`）、課題リスト、および `SharedPreferences` への保存・読み込みを定義する。 |
+| [`screens/task_data.dart`](screens/task_data.dart) | 課題データの形式（`Task`）と課題リストを定義する。締切通知の日数と繰り返し頻度も課題ごとに保持する。 |
+| [`data/repository/task_repository.dart`](data/repository/task_repository.dart) | Isarへの課題の保存・読み込み・更新・削除を行う。 |
+| [`services/simple_notification_service.dart`](services/simple_notification_service.dart) | Androidの課題締切通知を設定・解除する。通知日は課題ごとの設定に従い、設定した時刻に通知する。 |
 | [`screens/sub/attendance_data.dart`](screens/sub/attendance_data.dart) | 授業ごとの出席状況と `SharedPreferences` への保存・読み込みを定義する。出席率は「出席 ÷（出席・欠席・遅刻の記録数）」で計算し、公欠は分母から除外する。 |
 | [`screens/karender/schedule.dart`](screens/karender/schedule.dart) | カレンダー予定のデータ形式（予定名、開始日、終了日、色）を定義する。 |
 

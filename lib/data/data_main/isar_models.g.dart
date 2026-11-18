@@ -3335,39 +3335,59 @@ const TaskEntitySchema = CollectionSchema(
       name: r'deadline',
       type: IsarType.string,
     ),
-    r'isDone': PropertySchema(id: 2, name: r'isDone', type: IsarType.bool),
-    r'priority': PropertySchema(id: 3, name: r'priority', type: IsarType.long),
-    r'progress': PropertySchema(id: 4, name: r'progress', type: IsarType.long),
-    r'reflectionDifficulty': PropertySchema(
+    r'deadlineReminderDaysJson': PropertySchema(
+      id: 2,
+      name: r'deadlineReminderDaysJson',
+      type: IsarType.string,
+    ),
+    r'deadlineReminderFrequency': PropertySchema(
+      id: 3,
+      name: r'deadlineReminderFrequency',
+      type: IsarType.string,
+    ),
+    r'deadlineReminderHour': PropertySchema(
+      id: 4,
+      name: r'deadlineReminderHour',
+      type: IsarType.long,
+    ),
+    r'deadlineReminderMinute': PropertySchema(
       id: 5,
+      name: r'deadlineReminderMinute',
+      type: IsarType.long,
+    ),
+    r'isDone': PropertySchema(id: 6, name: r'isDone', type: IsarType.bool),
+    r'priority': PropertySchema(id: 7, name: r'priority', type: IsarType.long),
+    r'progress': PropertySchema(id: 8, name: r'progress', type: IsarType.long),
+    r'reflectionDifficulty': PropertySchema(
+      id: 9,
       name: r'reflectionDifficulty',
       type: IsarType.string,
     ),
     r'reflectionGoodPoint': PropertySchema(
-      id: 6,
+      id: 10,
       name: r'reflectionGoodPoint',
       type: IsarType.string,
     ),
     r'reflectionImprovement': PropertySchema(
-      id: 7,
+      id: 11,
       name: r'reflectionImprovement',
       type: IsarType.string,
     ),
     r'reflectionLearned': PropertySchema(
-      id: 8,
+      id: 12,
       name: r'reflectionLearned',
       type: IsarType.string,
     ),
     r'reflectionScore': PropertySchema(
-      id: 9,
+      id: 13,
       name: r'reflectionScore',
       type: IsarType.long,
     ),
-    r'subject': PropertySchema(id: 10, name: r'subject', type: IsarType.string),
-    r'termId': PropertySchema(id: 11, name: r'termId', type: IsarType.long),
-    r'title': PropertySchema(id: 12, name: r'title', type: IsarType.string),
+    r'subject': PropertySchema(id: 14, name: r'subject', type: IsarType.string),
+    r'termId': PropertySchema(id: 15, name: r'termId', type: IsarType.long),
+    r'title': PropertySchema(id: 16, name: r'title', type: IsarType.string),
     r'workMemo': PropertySchema(
-      id: 13,
+      id: 17,
       name: r'workMemo',
       type: IsarType.string,
     ),
@@ -3410,6 +3430,8 @@ int _taskEntityEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.checklistJson.length * 3;
   bytesCount += 3 + object.deadline.length * 3;
+  bytesCount += 3 + object.deadlineReminderDaysJson.length * 3;
+  bytesCount += 3 + object.deadlineReminderFrequency.length * 3;
   {
     final value = object.reflectionDifficulty;
     if (value != null) {
@@ -3448,18 +3470,22 @@ void _taskEntitySerialize(
 ) {
   writer.writeString(offsets[0], object.checklistJson);
   writer.writeString(offsets[1], object.deadline);
-  writer.writeBool(offsets[2], object.isDone);
-  writer.writeLong(offsets[3], object.priority);
-  writer.writeLong(offsets[4], object.progress);
-  writer.writeString(offsets[5], object.reflectionDifficulty);
-  writer.writeString(offsets[6], object.reflectionGoodPoint);
-  writer.writeString(offsets[7], object.reflectionImprovement);
-  writer.writeString(offsets[8], object.reflectionLearned);
-  writer.writeLong(offsets[9], object.reflectionScore);
-  writer.writeString(offsets[10], object.subject);
-  writer.writeLong(offsets[11], object.termId);
-  writer.writeString(offsets[12], object.title);
-  writer.writeString(offsets[13], object.workMemo);
+  writer.writeString(offsets[2], object.deadlineReminderDaysJson);
+  writer.writeString(offsets[3], object.deadlineReminderFrequency);
+  writer.writeLong(offsets[4], object.deadlineReminderHour);
+  writer.writeLong(offsets[5], object.deadlineReminderMinute);
+  writer.writeBool(offsets[6], object.isDone);
+  writer.writeLong(offsets[7], object.priority);
+  writer.writeLong(offsets[8], object.progress);
+  writer.writeString(offsets[9], object.reflectionDifficulty);
+  writer.writeString(offsets[10], object.reflectionGoodPoint);
+  writer.writeString(offsets[11], object.reflectionImprovement);
+  writer.writeString(offsets[12], object.reflectionLearned);
+  writer.writeLong(offsets[13], object.reflectionScore);
+  writer.writeString(offsets[14], object.subject);
+  writer.writeLong(offsets[15], object.termId);
+  writer.writeString(offsets[16], object.title);
+  writer.writeString(offsets[17], object.workMemo);
 }
 
 TaskEntity _taskEntityDeserialize(
@@ -3471,19 +3497,23 @@ TaskEntity _taskEntityDeserialize(
   final object = TaskEntity();
   object.checklistJson = reader.readString(offsets[0]);
   object.deadline = reader.readString(offsets[1]);
+  object.deadlineReminderDaysJson = reader.readString(offsets[2]);
+  object.deadlineReminderFrequency = reader.readString(offsets[3]);
+  object.deadlineReminderHour = reader.readLongOrNull(offsets[4]);
+  object.deadlineReminderMinute = reader.readLongOrNull(offsets[5]);
   object.id = id;
-  object.isDone = reader.readBool(offsets[2]);
-  object.priority = reader.readLong(offsets[3]);
-  object.progress = reader.readLong(offsets[4]);
-  object.reflectionDifficulty = reader.readStringOrNull(offsets[5]);
-  object.reflectionGoodPoint = reader.readStringOrNull(offsets[6]);
-  object.reflectionImprovement = reader.readStringOrNull(offsets[7]);
-  object.reflectionLearned = reader.readStringOrNull(offsets[8]);
-  object.reflectionScore = reader.readLongOrNull(offsets[9]);
-  object.subject = reader.readString(offsets[10]);
-  object.termId = reader.readLong(offsets[11]);
-  object.title = reader.readString(offsets[12]);
-  object.workMemo = reader.readString(offsets[13]);
+  object.isDone = reader.readBool(offsets[6]);
+  object.priority = reader.readLong(offsets[7]);
+  object.progress = reader.readLong(offsets[8]);
+  object.reflectionDifficulty = reader.readStringOrNull(offsets[9]);
+  object.reflectionGoodPoint = reader.readStringOrNull(offsets[10]);
+  object.reflectionImprovement = reader.readStringOrNull(offsets[11]);
+  object.reflectionLearned = reader.readStringOrNull(offsets[12]);
+  object.reflectionScore = reader.readLongOrNull(offsets[13]);
+  object.subject = reader.readString(offsets[14]);
+  object.termId = reader.readLong(offsets[15]);
+  object.title = reader.readString(offsets[16]);
+  object.workMemo = reader.readString(offsets[17]);
   return object;
 }
 
@@ -3499,28 +3529,36 @@ P _taskEntityDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
-    case 5:
-      return (reader.readStringOrNull(offset)) as P;
-    case 6:
-      return (reader.readStringOrNull(offset)) as P;
-    case 7:
-      return (reader.readStringOrNull(offset)) as P;
-    case 8:
-      return (reader.readStringOrNull(offset)) as P;
-    case 9:
       return (reader.readLongOrNull(offset)) as P;
-    case 10:
-      return (reader.readString(offset)) as P;
-    case 11:
+    case 5:
+      return (reader.readLongOrNull(offset)) as P;
+    case 6:
+      return (reader.readBool(offset)) as P;
+    case 7:
       return (reader.readLong(offset)) as P;
+    case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
+      return (reader.readStringOrNull(offset)) as P;
+    case 10:
+      return (reader.readStringOrNull(offset)) as P;
+    case 11:
+      return (reader.readStringOrNull(offset)) as P;
     case 12:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 13:
+      return (reader.readLongOrNull(offset)) as P;
+    case 14:
+      return (reader.readString(offset)) as P;
+    case 15:
+      return (reader.readLong(offset)) as P;
+    case 16:
+      return (reader.readString(offset)) as P;
+    case 17:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -4018,6 +4056,461 @@ extension TaskEntityQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'deadline', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'deadlineReminderDaysJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'deadlineReminderDaysJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'deadlineReminderDaysJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'deadlineReminderDaysJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'deadlineReminderDaysJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'deadlineReminderDaysJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'deadlineReminderDaysJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'deadlineReminderDaysJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'deadlineReminderDaysJson',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderDaysJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'deadlineReminderDaysJson',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'deadlineReminderFrequency',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'deadlineReminderFrequency',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'deadlineReminderFrequency',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'deadlineReminderFrequency',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'deadlineReminderFrequency',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'deadlineReminderFrequency',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'deadlineReminderFrequency',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'deadlineReminderFrequency',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'deadlineReminderFrequency',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderFrequencyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'deadlineReminderFrequency',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderHourIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'deadlineReminderHour'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderHourIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'deadlineReminderHour'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderHourEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'deadlineReminderHour',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderHourGreaterThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'deadlineReminderHour',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderHourLessThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'deadlineReminderHour',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderHourBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'deadlineReminderHour',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderMinuteIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'deadlineReminderMinute'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderMinuteIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'deadlineReminderMinute'),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderMinuteEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'deadlineReminderMinute',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderMinuteGreaterThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'deadlineReminderMinute',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderMinuteLessThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'deadlineReminderMinute',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterFilterCondition>
+  deadlineReminderMinuteBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'deadlineReminderMinute',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
       );
     });
   }
@@ -5457,6 +5950,62 @@ extension TaskEntityQuerySortBy
     });
   }
 
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByDeadlineReminderDaysJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderDaysJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByDeadlineReminderDaysJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderDaysJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByDeadlineReminderFrequency() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderFrequency', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByDeadlineReminderFrequencyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderFrequency', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByDeadlineReminderHour() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderHour', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByDeadlineReminderHourDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderHour', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByDeadlineReminderMinute() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderMinute', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  sortByDeadlineReminderMinuteDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderMinute', Sort.desc);
+    });
+  }
+
   QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy> sortByIsDone() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isDone', Sort.asc);
@@ -5633,6 +6182,62 @@ extension TaskEntityQuerySortThenBy
   QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy> thenByDeadlineDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deadline', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByDeadlineReminderDaysJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderDaysJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByDeadlineReminderDaysJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderDaysJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByDeadlineReminderFrequency() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderFrequency', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByDeadlineReminderFrequencyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderFrequency', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByDeadlineReminderHour() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderHour', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByDeadlineReminderHourDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderHour', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByDeadlineReminderMinute() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderMinute', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QAfterSortBy>
+  thenByDeadlineReminderMinuteDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deadlineReminderMinute', Sort.desc);
     });
   }
 
@@ -5822,6 +6427,40 @@ extension TaskEntityQueryWhereDistinct
     });
   }
 
+  QueryBuilder<TaskEntity, TaskEntity, QDistinct>
+  distinctByDeadlineReminderDaysJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'deadlineReminderDaysJson',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QDistinct>
+  distinctByDeadlineReminderFrequency({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'deadlineReminderFrequency',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QDistinct>
+  distinctByDeadlineReminderHour() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deadlineReminderHour');
+    });
+  }
+
+  QueryBuilder<TaskEntity, TaskEntity, QDistinct>
+  distinctByDeadlineReminderMinute() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deadlineReminderMinute');
+    });
+  }
+
   QueryBuilder<TaskEntity, TaskEntity, QDistinct> distinctByIsDone() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isDone');
@@ -5935,6 +6574,34 @@ extension TaskEntityQueryProperty
   QueryBuilder<TaskEntity, String, QQueryOperations> deadlineProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'deadline');
+    });
+  }
+
+  QueryBuilder<TaskEntity, String, QQueryOperations>
+  deadlineReminderDaysJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deadlineReminderDaysJson');
+    });
+  }
+
+  QueryBuilder<TaskEntity, String, QQueryOperations>
+  deadlineReminderFrequencyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deadlineReminderFrequency');
+    });
+  }
+
+  QueryBuilder<TaskEntity, int?, QQueryOperations>
+  deadlineReminderHourProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deadlineReminderHour');
+    });
+  }
+
+  QueryBuilder<TaskEntity, int?, QQueryOperations>
+  deadlineReminderMinuteProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deadlineReminderMinute');
     });
   }
 

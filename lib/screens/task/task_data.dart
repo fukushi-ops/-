@@ -1,5 +1,9 @@
 import 'package:flutter/foundation.dart';
 
+enum TaskReminderFrequency { none, daily, weekly, monthly }
+
+const maxTaskReminderDaysBeforeDeadline = 365;
+
 class Task {
   int? id; // ISAR上で編集・削除する課題を特定するID
   String title; // 課題名
@@ -10,6 +14,10 @@ class Task {
   int progress;
   String workMemo;
   List<TaskChecklistItem> checklist;
+  List<int> deadlineReminderDaysBefore;
+  TaskReminderFrequency deadlineReminderFrequency;
+  int deadlineReminderHour;
+  int deadlineReminderMinute;
 
   // 自己評価・振り返り
   int? reflectionScore;
@@ -28,6 +36,10 @@ class Task {
     this.progress = 0,
     this.workMemo = '',
     this.checklist = const [],
+    this.deadlineReminderDaysBefore = const [3],
+    this.deadlineReminderFrequency = TaskReminderFrequency.daily,
+    this.deadlineReminderHour = 9,
+    this.deadlineReminderMinute = 0,
     this.reflectionScore,
     this.reflectionDifficulty,
     this.reflectionLearned,
@@ -50,6 +62,10 @@ class Task {
     int? progress,
     String? workMemo,
     List<TaskChecklistItem>? checklist,
+    List<int>? deadlineReminderDaysBefore,
+    TaskReminderFrequency? deadlineReminderFrequency,
+    int? deadlineReminderHour,
+    int? deadlineReminderMinute,
     int? reflectionScore,
     String? reflectionDifficulty,
     String? reflectionLearned,
@@ -66,6 +82,13 @@ class Task {
       progress: progress ?? this.progress,
       workMemo: workMemo ?? this.workMemo,
       checklist: checklist ?? this.checklist,
+      deadlineReminderDaysBefore:
+          deadlineReminderDaysBefore ?? this.deadlineReminderDaysBefore,
+      deadlineReminderFrequency:
+          deadlineReminderFrequency ?? this.deadlineReminderFrequency,
+      deadlineReminderHour: deadlineReminderHour ?? this.deadlineReminderHour,
+      deadlineReminderMinute:
+          deadlineReminderMinute ?? this.deadlineReminderMinute,
       reflectionScore: reflectionScore ?? this.reflectionScore,
       reflectionDifficulty: reflectionDifficulty ?? this.reflectionDifficulty,
       reflectionLearned: reflectionLearned ?? this.reflectionLearned,

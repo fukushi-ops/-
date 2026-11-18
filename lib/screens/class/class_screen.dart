@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../data/repository/lesson_repository.dart';
 import '../../data/repository/subject_repository.dart';
+import '../../services/home_widget_service.dart';
 import 'add_class_screen.dart';
 import 'edit_class_screen.dart';
 import 'lesson_data.dart';
@@ -54,6 +55,7 @@ class _ClassScreenState extends State<ClassScreen> {
           LessonData.lessonsByDay[item.weekday]!.add(item.lesson);
         }
       });
+      HomeWidgetService.refreshInBackground();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('${saved.length}件の授業を時間割に追加しました')));
@@ -83,6 +85,7 @@ class _ClassScreenState extends State<ClassScreen> {
     setState(() {
       LessonData.lessonsByDay[selectedDay]!.add(saved);
     });
+    HomeWidgetService.refreshInBackground();
   }
 
   @override
@@ -178,6 +181,7 @@ class _ClassScreenState extends State<ClassScreen> {
 
                           try {
                             await LessonRepository.deleteLesson(lesson: lesson);
+                            HomeWidgetService.refreshInBackground();
                           } on Exception catch (error) {
                             if (!mounted) return;
 
@@ -266,6 +270,7 @@ class _ClassScreenState extends State<ClassScreen> {
                                       lessons[lessonIndex] = result;
                                     }
                                   });
+                                  HomeWidgetService.refreshInBackground();
                                 } on Exception catch (error) {
                                   if (!mounted) return;
                                   final messenger = ScaffoldMessenger.maybeOf(

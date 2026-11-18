@@ -6,6 +6,7 @@ import 'class/lesson_data.dart';
 import '../data/repository/lesson_repository.dart';
 import '../data/repository/subject_repository.dart';
 import '../data/repository/task_repository.dart';
+import '../services/home_widget_service.dart';
 import '../services/simple_notification_service.dart';
 import 'task/assignment_screen.dart';
 import 'task/learning_history_screen.dart';
@@ -23,6 +24,21 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   int _homeRefreshToken = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    TaskData.changed.addListener(_refreshWidget);
+    HomeWidgetService.refreshInBackground();
+  }
+
+  @override
+  void dispose() {
+    TaskData.changed.removeListener(_refreshWidget);
+    super.dispose();
+  }
+
+  void _refreshWidget() => HomeWidgetService.refreshInBackground();
 
   void _selectTab(int index) {
     setState(() {

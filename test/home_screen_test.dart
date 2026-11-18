@@ -1,11 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/screens/home_screen.dart';
 import 'package:my_app/screens/task/task_data.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   tearDown(() {
     TaskData.tasks = [];
+  });
+
+  testWidgets('登録案内は非表示にしてもボタンから再表示できる', (tester) async {
+    Future<void> pumpHome({Key? key}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: HomeScreen(
+            key: key,
+            userName: 'テスト',
+            onSelectTab: (_) {},
+            onTermSelected: (_) async {},
+            refreshToken: 0,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await pumpHome();
+    expect(find.text('登録はこの順番がおすすめです'), findsOneWidget);
+    expect(find.text('今週の予定'), findsNothing);
+
+    await tester.tap(find.text('表示しない'));
+    await tester.pumpAndSettle();
+    expect(find.text('登録はこの順番がおすすめです'), findsNothing);
+    expect(find.text('登録のおすすめを表示'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await pumpHome(key: const ValueKey('recreated'));
+    expect(find.text('登録のおすすめを表示'), findsOneWidget);
+
+    await tester.tap(find.text('登録のおすすめを表示'));
+    await tester.pumpAndSettle();
+    expect(find.text('登録はこの順番がおすすめです'), findsOneWidget);
   });
 
   testWidgets('ホームの課題欄には未提出の高優先度課題だけを表示する', (tester) async {

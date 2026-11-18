@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/repository/lesson_repository.dart';
 import '../../widgets/subject_dropdown_field.dart';
+import 'task_deadline_notification_form.dart';
 import 'task_deadline_picker.dart';
 import 'task_data.dart';
 
@@ -20,6 +21,7 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
   late final TextEditingController _deadlineController;
   String? _selectedSubject;
   late int _priority;
+  late TaskReminderSettingsValue _reminderSettings;
 
   @override
   void initState() {
@@ -28,6 +30,7 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
     _selectedSubject = widget.task.subject;
     _deadlineController = TextEditingController(text: widget.task.deadline);
     _priority = widget.task.priority;
+    _reminderSettings = TaskReminderSettingsValue.fromTask(widget.task);
   }
 
   @override
@@ -162,6 +165,11 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
               },
             ),
             const SizedBox(height: 24),
+            TaskDeadlineNotificationForm(
+              initialValue: _reminderSettings,
+              onChanged: (value) => setState(() => _reminderSettings = value),
+            ),
+            const SizedBox(height: 24),
             DropdownButtonFormField<int>(
               initialValue: _priority,
               decoration: const InputDecoration(
@@ -253,6 +261,12 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
+    if (!_reminderSettings.isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('カスタム通知は1〜365日の範囲で入力してください')),
+      );
+      return;
+    }
     final subject = _selectedSubject;
     if (subject == null) {
       ScaffoldMessenger.of(
@@ -273,6 +287,10 @@ class _EditAssignmentScreenState extends State<EditAssignmentScreen> {
         progress: widget.task.progress,
         workMemo: widget.task.workMemo,
         checklist: widget.task.checklist,
+        deadlineReminderDaysBefore: _reminderSettings.daysBeforeDeadline,
+        deadlineReminderFrequency: _reminderSettings.frequency,
+        deadlineReminderHour: _reminderSettings.hour,
+        deadlineReminderMinute: _reminderSettings.minute,
         reflectionScore: widget.task.reflectionScore,
         reflectionDifficulty: widget.task.reflectionDifficulty,
         reflectionLearned: widget.task.reflectionLearned,

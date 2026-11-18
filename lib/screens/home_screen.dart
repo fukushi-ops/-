@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/repository/lesson_repository.dart';
 import '../data/repository/subject_repository.dart';
 import '../services/simple_notification_service.dart';
 import '../widgets/active_term_action.dart';
-import 'carender/calender_screen.dart';
 import 'class/lesson_data.dart';
 import 'task/task_data.dart';
 import 'subject/subject_registration_screen.dart';
@@ -28,12 +28,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _registrationFlowHiddenKey = 'home_registration_flow_hidden';
+
   late Future<List<String>> _subjectsFuture;
+  bool _registrationFlowHidden = false;
 
   @override
   void initState() {
     super.initState();
     _refreshSubjects();
+    _loadRegistrationFlowVisibility();
   }
 
   @override
@@ -49,6 +53,35 @@ class _HomeScreenState extends State<HomeScreen> {
     _subjectsFuture = termId == null
         ? Future.value(const <String>[])
         : SubjectRepository.load(termId: termId);
+  }
+
+  Future<void> _loadRegistrationFlowVisibility() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _registrationFlowHidden =
+          preferences.getBool(_registrationFlowHiddenKey) ?? false;
+    });
+  }
+
+  Future<void> _setRegistrationFlowHidden(bool hidden) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final saved = await preferences.setBool(
+        _registrationFlowHiddenKey,
+        hidden,
+      );
+      if (!saved) {
+        throw StateError('登録案内の表示設定を保存できませんでした。');
+      }
+      if (!mounted) return;
+      setState(() => _registrationFlowHidden = hidden);
+    } on Exception catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('登録案内の表示設定を更新できませんでした: $error')));
+    }
   }
 
   Future<void> _openSubjectRegistration() async {
@@ -68,16 +101,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final formattedDate = "${now.month}月${now.day}日（${_weekday(now.weekday)}）";
     final today = _weekday(now.weekday);
-    final highPriorityTasks = TaskData.tasks
-        .where((task) => !task.isDone && task.priority == 1)
-        .toList()
-      ..sort((a, b) {
-        final aDeadline = DateTime.tryParse(a.deadline.trim());
-        final bDeadline = DateTime.tryParse(b.deadline.trim());
-        if (aDeadline == null) return bDeadline == null ? 0 : 1;
-        if (bDeadline == null) return -1;
-        return aDeadline.compareTo(bDeadline);
-      });
+    final highPriorityTasks =
+        TaskData.tasks
+            .where((task) => !task.isDone && task.priority == 1)
+            .toList()
+          ..sort((a, b) {
+            final aDeadline = DateTime.tryParse(a.deadline.trim());
+            final bDeadline = DateTime.tryParse(b.deadline.trim());
+            if (aDeadline == null) return bDeadline == null ? 0 : 1;
+            if (bDeadline == null) return -1;
+            return aDeadline.compareTo(bDeadline);
+          });
 
     final weekStart = DateTime(
       now.year,
@@ -86,18 +120,19 @@ class _HomeScreenState extends State<HomeScreen> {
     ).subtract(Duration(days: now.weekday - 1));
     final weekEnd = weekStart.add(const Duration(days: 7));
 
-    final weeklyTasks = TaskData.tasks.where((task) {
-      final deadline = DateTime.tryParse(task.deadline.trim());
-      return deadline != null &&
-          !deadline.isBefore(weekStart) &&
-          deadline.isBefore(weekEnd);
-    }).toList()..sort((a, b) {
-      final aDeadline = DateTime.tryParse(a.deadline.trim());
-      final bDeadline = DateTime.tryParse(b.deadline.trim());
-      if (aDeadline == null) return bDeadline == null ? 0 : 1;
-      if (bDeadline == null) return -1;
-      return aDeadline.compareTo(bDeadline);
-    });
+    final weeklyTasks =
+        TaskData.tasks.where((task) {
+          final deadline = DateTime.tryParse(task.deadline.trim());
+          return deadline != null &&
+              !deadline.isBefore(weekStart) &&
+              deadline.isBefore(weekEnd);
+        }).toList()..sort((a, b) {
+          final aDeadline = DateTime.tryParse(a.deadline.trim());
+          final bDeadline = DateTime.tryParse(b.deadline.trim());
+          if (aDeadline == null) return bDeadline == null ? 0 : 1;
+          if (bDeadline == null) return -1;
+          return aDeadline.compareTo(bDeadline);
+        });
 
     final completedWeeklyTasks = weeklyTasks
         .where((task) => task.isDone)
@@ -147,34 +182,46 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              FutureBuilder<List<String>>(
-                future: _subjectsFuture,
-                builder: (context, snapshot) {
-                  final lessonCount = LessonData.lessonsByDay.values.fold<int>(
-                    0,
-                    (total, lessons) => total + lessons.length,
-                  );
-                  return Column(
-                    children: [
-                      if (snapshot.hasError)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            '科目の登録状況を読み込めませんでした: ${snapshot.error}',
+              if (_registrationFlowHidden)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => _setRegistrationFlowHidden(false),
+                    icon: const Icon(Icons.lightbulb_outline),
+                    label: const Text('登録のおすすめを表示'),
+                  ),
+                )
+              else
+                FutureBuilder<List<String>>(
+                  future: _subjectsFuture,
+                  builder: (context, snapshot) {
+                    final lessonCount = LessonData.lessonsByDay.values
+                        .fold<int>(
+                          0,
+                          (total, lessons) => total + lessons.length,
+                        );
+                    return Column(
+                      children: [
+                        if (snapshot.hasError)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              '科目の登録状況を読み込めませんでした: ${snapshot.error}',
+                            ),
                           ),
+                        _RegistrationFlowCard(
+                          subjectCount: snapshot.data?.length,
+                          lessonCount: lessonCount,
+                          taskCount: TaskData.tasks.length,
+                          onRegisterSubjects: _openSubjectRegistration,
+                          onOpenTimetable: () => widget.onSelectTab(1),
+                          onOpenAssignments: () => widget.onSelectTab(2),
+                          onHide: () => _setRegistrationFlowHidden(true),
                         ),
-                      _RegistrationFlowCard(
-                        subjectCount: snapshot.data?.length,
-                        lessonCount: lessonCount,
-                        taskCount: TaskData.tasks.length,
-                        onRegisterSubjects: _openSubjectRegistration,
-                        onOpenTimetable: () => widget.onSelectTab(1),
-                        onOpenAssignments: () => widget.onSelectTab(2),
-                      ),
-                    ],
-                  );
-                },
-              ),
+                      ],
+                    );
+                  },
+                ),
               const SizedBox(height: 20),
               // =========================
               // 今日の授業
@@ -209,22 +256,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
-                        ),
-                        TextButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const CalendarScreen(),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.calendar_month, size: 18),
-                          label: const Text('今週の予定'),
-                          style: TextButton.styleFrom(
-                            backgroundColor: const Color(0xFFDDEEFF),
-                            visualDensity: VisualDensity.compact,
-                          ),
                         ),
                       ],
                     ),
@@ -538,10 +569,7 @@ class _WeeklyTaskGroup extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 '$title (${tasks.length})',
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -588,6 +616,7 @@ class _RegistrationFlowCard extends StatelessWidget {
     required this.onRegisterSubjects,
     required this.onOpenTimetable,
     required this.onOpenAssignments,
+    required this.onHide,
   });
 
   final int? subjectCount;
@@ -596,6 +625,7 @@ class _RegistrationFlowCard extends StatelessWidget {
   final VoidCallback onRegisterSubjects;
   final VoidCallback onOpenTimetable;
   final VoidCallback onOpenAssignments;
+  final VoidCallback onHide;
 
   @override
   Widget build(BuildContext context) {
@@ -608,11 +638,18 @@ class _RegistrationFlowCard extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                '登録はこの順番がおすすめです',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '登録はこの順番がおすすめです',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  TextButton(onPressed: onHide, child: const Text('表示しない')),
+                ],
               ),
             ),
             _RegistrationStep(
