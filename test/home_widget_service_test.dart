@@ -23,42 +23,12 @@ void main() {
   test('widget timetable data sorts each weekday by start time', () {
     final encoded = HomeWidgetService.encodeLessons({
       '月': [
-        Lesson(
-          name: '6限',
-          teacher: '',
-          room: '',
-          time: '14:00',
-          startTime: 1400,
-        ),
-        Lesson(
-          name: '5限',
-          teacher: '',
-          room: '',
-          time: '13:00',
-          startTime: 1300,
-        ),
-        Lesson(
-          name: '4限',
-          teacher: '',
-          room: '',
-          time: '12:00',
-          startTime: 1200,
-        ),
-        Lesson(
-          name: '3限',
-          teacher: '',
-          room: '',
-          time: '11:00',
-          startTime: 1100,
-        ),
-        Lesson(
-          name: '2限',
-          teacher: '',
-          room: '',
-          time: '10:00',
-          startTime: 1000,
-        ),
-        Lesson(name: '1限', teacher: '', room: '', time: '9:00', startTime: 900),
+        Lesson(name: '6限', room: '', periodNumber: 6),
+        Lesson(name: '5限', room: '', periodNumber: 5),
+        Lesson(name: '4限', room: '', periodNumber: 4),
+        Lesson(name: '3限', room: '', periodNumber: 3),
+        Lesson(name: '2限', room: '', periodNumber: 2),
+        Lesson(name: '1限', room: '', periodNumber: 1),
       ],
     });
 

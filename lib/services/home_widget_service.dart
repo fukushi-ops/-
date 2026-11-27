@@ -35,8 +35,13 @@ class HomeWidgetService {
       for (final entry in lessonsByDay.entries)
         entry.key:
             (List<Lesson>.of(entry.value)
-                  ..sort((a, b) => a.startTime.compareTo(b.startTime)))
-                .map((lesson) => {'name': lesson.name, 'time': lesson.time})
+                  ..sort((a, b) => a.periodNumber.compareTo(b.periodNumber)))
+                .map(
+                  (lesson) => {
+                    'name': lesson.name,
+                    'time': '${lesson.periodNumber}限',
+                  },
+                )
                 .toList(),
     });
   }

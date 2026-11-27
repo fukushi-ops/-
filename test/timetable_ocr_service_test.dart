@@ -87,9 +87,12 @@ void main() {
 
     expect(
       lessons
-          .map((item) => (item.weekday, item.lesson.name, item.lesson.time))
+          .map(
+            (item) =>
+                (item.weekday, item.lesson.name, item.lesson.periodNumber),
+          )
           .toList(),
-      [('月', '国語', '1限目'), ('火', '体育', '1限目'), ('金', '算数', '5限目')],
+      [('月', '国語', 1), ('火', '体育', 1), ('金', '算数', 5)],
     );
   });
 }

@@ -132,13 +132,7 @@ class TimetableOcrService {
       imports.add(
         LessonImport(
           weekday: weekday,
-          lesson: Lesson(
-            name: name,
-            teacher: '',
-            room: '',
-            time: '$period限目',
-            startTime: period * 100,
-          ),
+          lesson: Lesson(name: name, room: '', periodNumber: period),
         ),
       );
     }
@@ -148,7 +142,7 @@ class TimetableOcrService {
           _weekdays.indexOf(a.weekday) - _weekdays.indexOf(b.weekday);
       return dayOrder != 0
           ? dayOrder
-          : a.lesson.startTime.compareTo(b.lesson.startTime);
+          : a.lesson.periodNumber.compareTo(b.lesson.periodNumber);
     });
     return imports;
   }

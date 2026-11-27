@@ -79,7 +79,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     final weekday = _weekday(selectedDate.weekday);
     final lessons = List<Lesson>.from(
       LessonData.lessonsByDay[weekday] ?? const <Lesson>[],
-    )..sort((a, b) => a.startTime.compareTo(b.startTime));
+    )..sort((a, b) => a.periodNumber.compareTo(b.periodNumber));
 
     return Scaffold(
       appBar: AppBar(
@@ -189,7 +189,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '${lesson.time} · ${lesson.room} · ${lesson.teacher}',
+                                      '${lesson.periodNumber}限 · ${lesson.room}',
                                     ),
                                     const SizedBox(height: 12),
                                     Wrap(

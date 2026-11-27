@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/screens/home_screen.dart';
 import 'package:my_app/screens/task/task_data.dart';
+import 'package:my_app/data/repository/lesson_repository.dart';
 
 void main() {
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    LessonRepository.clearHomeRegistrationFlowHiddenCache();
   });
 
   tearDown(() {

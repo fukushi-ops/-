@@ -6,8 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../data/repository/lesson_repository.dart';
 import '../../data/repository/subject_repository.dart';
 import '../../services/home_widget_service.dart';
-import 'add_class_screen.dart';
-import 'edit_class_screen.dart';
+import '../../widgets/subject_dropdown_field.dart';
 import 'lesson_data.dart';
 import '../../widgets/active_term_action.dart';
 import 'timetable_import_review_screen.dart';
@@ -25,6 +24,23 @@ class ClassScreen extends StatefulWidget {
 class _ClassScreenState extends State<ClassScreen> {
   static const _days = ["月", "火", "水", "木", "金", "土", "日"];
   String selectedDay = "月";
+  final Map<String, int> _visiblePeriodCounts = {};
+
+  int get _visiblePeriodCount {
+    final lessons = LessonData.lessonsByDay[selectedDay]!;
+    final savedMax = lessons.fold<int>(
+      0,
+      (max, lesson) => lesson.periodNumber > max ? lesson.periodNumber : max,
+    );
+    final visibleCount = _visiblePeriodCounts[selectedDay] ?? 0;
+    return savedMax > visibleCount ? savedMax : visibleCount;
+  }
+
+  void _addPeriodBox() {
+    setState(() {
+      _visiblePeriodCounts[selectedDay] = _visiblePeriodCount + 1;
+    });
+  }
 
   Future<void> _importTimetable() async {
     final image = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -67,32 +83,187 @@ class _ClassScreenState extends State<ClassScreen> {
     }
   }
 
-  Future<void> _addLesson() async {
-    final result = await Navigator.push<Lesson>(
-      context,
-      MaterialPageRoute(builder: (_) => const AddClassScreen()),
+  Future<void> _editLesson(Lesson lesson) {
+    return _showLessonDialog(lesson.periodNumber, lesson: lesson);
+  }
+
+  void _replaceLessons(String weekday, List<Lesson> replacements) {
+    final lessons = LessonData.lessonsByDay[weekday]!;
+    for (final replacement in replacements) {
+      final lessonIndex = lessons.indexWhere(
+        (lesson) =>
+            replacement.lessonId != null &&
+            lesson.lessonId == replacement.lessonId,
+      );
+      if (lessonIndex != -1) {
+        lessons[lessonIndex] = replacement;
+      }
+    }
+  }
+
+  Future<void> _reorderPeriods({
+    required int oldIndex,
+    required int newIndex,
+    required List<Lesson?> periods,
+  }) async {
+    if (oldIndex == newIndex) return;
+
+    final weekday = selectedDay;
+    final reorderedPeriods = List<Lesson?>.of(periods);
+    final movedPeriod = reorderedPeriods.removeAt(oldIndex);
+    reorderedPeriods.insert(newIndex, movedPeriod);
+
+    final updatedLessons = <Lesson>[];
+    for (var index = 0; index < reorderedPeriods.length; index++) {
+      final lesson = reorderedPeriods[index];
+      if (lesson == null) continue;
+
+      updatedLessons.add(
+        Lesson(
+          name: lesson.name,
+          room: lesson.room,
+          periodNumber: index + 1,
+          courseId: lesson.courseId,
+          lessonId: lesson.lessonId,
+        ),
+      );
+    }
+
+    final originalLessons = List<Lesson>.of(LessonData.lessonsByDay[weekday]!);
+    setState(() {
+      _replaceLessons(weekday, updatedLessons);
+    });
+
+    try {
+      await LessonRepository.updateLessonPeriods(
+        weekday: weekday,
+        lessons: updatedLessons,
+      );
+      if (!mounted) return;
+
+      HomeWidgetService.refreshInBackground();
+    } on Exception catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _replaceLessons(weekday, originalLessons);
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('授業の順序変更に失敗しました: $error')));
+    }
+  }
+
+  Future<void> _deleteEmptyPeriod({
+    required int periodNumber,
+    required List<Lesson?> periods,
+  }) async {
+    final weekday = selectedDay;
+    final previousCount = _visiblePeriodCount;
+    final remainingPeriods = List<Lesson?>.of(periods)
+      ..removeAt(periodNumber - 1);
+    final updatedLessons = <Lesson>[];
+
+    for (var index = 0; index < remainingPeriods.length; index++) {
+      final lesson = remainingPeriods[index];
+      if (lesson == null) continue;
+
+      updatedLessons.add(
+        Lesson(
+          name: lesson.name,
+          room: lesson.room,
+          periodNumber: index + 1,
+          courseId: lesson.courseId,
+          lessonId: lesson.lessonId,
+        ),
+      );
+    }
+
+    final originalLessons = List<Lesson>.of(LessonData.lessonsByDay[weekday]!);
+    setState(() {
+      _visiblePeriodCounts[weekday] = previousCount - 1;
+      _replaceLessons(weekday, updatedLessons);
+    });
+
+    try {
+      await LessonRepository.updateLessonPeriods(
+        weekday: weekday,
+        lessons: updatedLessons,
+      );
+      if (!mounted) return;
+
+      HomeWidgetService.refreshInBackground();
+    } on Exception catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _visiblePeriodCounts[weekday] = previousCount;
+        _replaceLessons(weekday, originalLessons);
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('空欄の限目を削除できませんでした: $error')));
+    }
+  }
+
+  Future<void> _showLessonDialog(int periodNumber, {Lesson? lesson}) async {
+    final result = await showDialog<Lesson>(
+      context: context,
+      builder: (_) =>
+          _EditLessonDialog(periodNumber: periodNumber, lesson: lesson),
     );
 
     if (result == null) return;
 
-    final saved = await LessonRepository.addLesson(
-      termId: LessonRepository.activeTermId,
-      weekday: selectedDay,
-      lesson: result,
-    );
+    try {
+      if (lesson == null) {
+        final saved = await LessonRepository.addLesson(
+          termId: LessonRepository.activeTermId,
+          weekday: selectedDay,
+          lesson: result,
+        );
 
-    if (!mounted) return;
-    setState(() {
-      LessonData.lessonsByDay[selectedDay]!.add(saved);
-    });
-    HomeWidgetService.refreshInBackground();
+        if (!mounted) return;
+        setState(() {
+          LessonData.lessonsByDay[selectedDay]!.add(saved);
+        });
+      } else {
+        await LessonRepository.updateLesson(
+          weekday: selectedDay,
+          lesson: result,
+        );
+
+        if (!mounted) return;
+        setState(() {
+          final lessons = LessonData.lessonsByDay[selectedDay]!;
+          final lessonIndex = lessons.indexOf(lesson);
+          if (lessonIndex != -1) {
+            lessons[lessonIndex] = result;
+          }
+        });
+      }
+
+      HomeWidgetService.refreshInBackground();
+    } on Exception catch (error) {
+      if (!mounted) return;
+      final action = lesson == null ? '登録' : '更新';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('授業の$actionに失敗しました: $error')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final lessons = LessonData.lessonsByDay[selectedDay]!;
     final sortedLessons = List.of(lessons)
-      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+      ..sort((a, b) => a.periodNumber.compareTo(b.periodNumber));
+    final lessonByPeriod = {
+      for (final lesson in sortedLessons) lesson.periodNumber: lesson,
+    };
+    final visiblePeriodCount = _visiblePeriodCount;
+    final periods = List<Lesson?>.generate(
+      visiblePeriodCount,
+      (index) => lessonByPeriod[index + 1],
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -132,7 +303,7 @@ class _ClassScreenState extends State<ClassScreen> {
             ),
           ),
           Expanded(
-            child: sortedLessons.isEmpty
+            child: visiblePeriodCount == 0
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -152,11 +323,63 @@ class _ClassScreenState extends State<ClassScreen> {
                       ],
                     ),
                   )
-                : ListView.builder(
+                : ReorderableListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                    itemCount: sortedLessons.length,
+                    itemCount: visiblePeriodCount,
+                    buildDefaultDragHandles: false,
+                    onReorderItem: (oldIndex, newIndex) => _reorderPeriods(
+                      oldIndex: oldIndex,
+                      newIndex: newIndex,
+                      periods: periods,
+                    ),
                     itemBuilder: (context, index) {
-                      final lesson = sortedLessons[index];
+                      final periodNumber = index + 1;
+                      final lesson = periods[index];
+                      if (lesson == null) {
+                        return Dismissible(
+                          key: ValueKey('empty-period-$periodNumber'),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.white,
+                            ),
+                          ),
+                          onDismissed: (_) => _deleteEmptyPeriod(
+                            periodNumber: periodNumber,
+                            periods: periods,
+                          ),
+                          child: Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                radius: 60,
+                                child: Text(
+                                  '$periodNumber\n限目',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              title: const Text('授業を登録'),
+                              trailing: ReorderableDragStartListener(
+                                index: index,
+                                child: const Tooltip(
+                                  message: 'ドラッグして順序を変更',
+                                  child: Icon(Icons.drag_handle),
+                                ),
+                              ),
+                              onTap: () => _showLessonDialog(periodNumber),
+                            ),
+                          ),
+                        );
+                      }
+
                       return Dismissible(
                         key: ObjectKey(lesson),
                         direction: DismissDirection.endToStart,
@@ -175,7 +398,10 @@ class _ClassScreenState extends State<ClassScreen> {
                         ),
                         onDismissed: (_) async {
                           final index = lessons.indexOf(lesson);
+                          final messenger = ScaffoldMessenger.maybeOf(context);
                           setState(() {
+                            _visiblePeriodCounts[selectedDay] =
+                                _visiblePeriodCount;
                             lessons.remove(lesson);
                           });
 
@@ -191,9 +417,6 @@ class _ClassScreenState extends State<ClassScreen> {
                                 lesson,
                               );
                             });
-                            final messenger = ScaffoldMessenger.maybeOf(
-                              context,
-                            );
                             messenger?.showSnackBar(
                               SnackBar(content: Text('授業の削除に失敗しました: $error')),
                             );
@@ -208,9 +431,9 @@ class _ClassScreenState extends State<ClassScreen> {
                               vertical: 10,
                             ),
                             leading: CircleAvatar(
-                              radius: 28,
+                              radius: 60,
                               child: Text(
-                                '${index + 1}\n限目',
+                                '$periodNumber\n限目',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   fontSize: 13,
@@ -230,60 +453,21 @@ class _ClassScreenState extends State<ClassScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _LessonDetail(
-                                    icon: Icons.access_time,
-                                    text: lesson.time,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  _LessonDetail(
                                     icon: Icons.meeting_room_outlined,
-                                    text: lesson.room,
+                                    text: '${lesson.room}教室',
                                   ),
                                   const SizedBox(height: 4),
-                                  _LessonDetail(
-                                    icon: Icons.person_outline,
-                                    text: lesson.teacher,
-                                  ),
                                 ],
                               ),
                             ),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () async {
-                              final result = await Navigator.push<Lesson>(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      EditClassScreen(lesson: lesson),
-                                ),
-                              );
-
-                              if (result != null) {
-                                try {
-                                  await LessonRepository.updateLesson(
-                                    weekday: selectedDay,
-                                    lesson: result,
-                                  );
-
-                                  if (!mounted) return;
-                                  setState(() {
-                                    final lessonIndex = lessons.indexOf(lesson);
-                                    if (lessonIndex != -1) {
-                                      lessons[lessonIndex] = result;
-                                    }
-                                  });
-                                  HomeWidgetService.refreshInBackground();
-                                } on Exception catch (error) {
-                                  if (!mounted) return;
-                                  final messenger = ScaffoldMessenger.maybeOf(
-                                    context,
-                                  );
-                                  messenger?.showSnackBar(
-                                    SnackBar(
-                                      content: Text('授業の更新に失敗しました: $error'),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
+                            trailing: ReorderableDragStartListener(
+                              index: index,
+                              child: const Tooltip(
+                                message: 'ドラッグして順序を変更',
+                                child: Icon(Icons.drag_handle),
+                              ),
+                            ),
+                            onTap: () => _editLesson(lesson),
                           ),
                         ),
                       );
@@ -294,7 +478,7 @@ class _ClassScreenState extends State<ClassScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'addLessonFab',
-        onPressed: _addLesson,
+        onPressed: _addPeriodBox,
         child: const Icon(Icons.add),
       ),
     );
@@ -314,6 +498,85 @@ class _LessonDetail extends StatelessWidget {
         Icon(icon, size: 16, color: Theme.of(context).colorScheme.secondary),
         const SizedBox(width: 6),
         Expanded(child: Text(text)),
+      ],
+    );
+  }
+}
+
+class _EditLessonDialog extends StatefulWidget {
+  const _EditLessonDialog({required this.periodNumber, this.lesson});
+
+  final int periodNumber;
+  final Lesson? lesson;
+
+  @override
+  State<_EditLessonDialog> createState() => _EditLessonDialogState();
+}
+
+class _EditLessonDialogState extends State<_EditLessonDialog> {
+  late String? _selectedSubject = widget.lesson?.name;
+  late final TextEditingController _roomController = TextEditingController(
+    text: widget.lesson?.room ?? '',
+  );
+
+  @override
+  void dispose() {
+    _roomController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('${widget.periodNumber}限目を編集'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SubjectDropdownField(
+              termId: LessonRepository.activeTermId,
+              initialValue: _selectedSubject,
+              onChanged: (subject) {
+                setState(() {
+                  _selectedSubject = subject;
+                });
+              },
+            ),
+            TextField(
+              controller: _roomController,
+              decoration: const InputDecoration(labelText: '教室'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('キャンセル'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final subject = _selectedSubject;
+            if (subject == null) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('科目を選択してください')));
+              return;
+            }
+
+            Navigator.pop(
+              context,
+              Lesson(
+                name: subject,
+                room: _roomController.text.trim(),
+                periodNumber: widget.periodNumber,
+                courseId: widget.lesson?.courseId,
+                lessonId: widget.lesson?.lessonId,
+              ),
+            );
+          },
+          child: const Text('保存'),
+        ),
       ],
     );
   }

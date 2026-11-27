@@ -5,13 +5,14 @@ import 'isar_models.dart';
 class IsarService {
   static Isar? _instance;
 
-  static Future<Isar> open() async {
+  static Future<Isar> open({String? directory}) async {
     final current = _instance;
     if (current != null && current.isOpen) {
       return current;
     }
 
-    final directory = await getApplicationDocumentsDirectory();
+    final directoryPath =
+        directory ?? (await getApplicationDocumentsDirectory()).path;
     _instance = await Isar.open([
       AcademicTermSchema,
       CourseEntitySchema,
@@ -22,8 +23,16 @@ class IsarService {
       AttendanceEntitySchema,
       AppSettingsSchema,
       CalendarEventEntitySchema,
-    ], directory: directory.path);
+    ], directory: directoryPath);
     return _instance!;
+  }
+
+  static Future<void> close() async {
+    final isar = _instance;
+    if (isar != null && isar.isOpen) {
+      await isar.close();
+    }
+    _instance = null;
   }
 
   static Isar get instance {

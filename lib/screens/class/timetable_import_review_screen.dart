@@ -47,10 +47,8 @@ class _TimetableImportReviewScreenState
               weekday: item.weekday,
               lesson: Lesson(
                 name: item.name.text.trim(),
-                teacher: item.teacher.text.trim(),
                 room: item.room.text.trim(),
-                time: item.time.text.trim(),
-                startTime: _parseStartTime(item.time.text, item.startTime),
+                periodNumber: item.periodNumber,
               ),
             ),
           )
@@ -110,15 +108,8 @@ class _TimetableImportReviewScreenState
                           decoration: const InputDecoration(labelText: '授業名'),
                         ),
                         TextField(
-                          controller: item.time,
                           decoration: const InputDecoration(
                             labelText: '時刻または時限（例：9:00～10:30、1限目）',
-                          ),
-                        ),
-                        TextField(
-                          controller: item.teacher,
-                          decoration: const InputDecoration(
-                            labelText: '先生（任意）',
                           ),
                         ),
                         TextField(
@@ -149,34 +140,26 @@ class _EditableLesson {
   _EditableLesson({
     required this.weekday,
     required this.name,
-    required this.teacher,
     required this.room,
-    required this.time,
-    required this.startTime,
+    required this.periodNumber,
   });
 
   factory _EditableLesson.fromImport(LessonImport item) {
     return _EditableLesson(
       weekday: item.weekday,
       name: TextEditingController(text: item.lesson.name),
-      teacher: TextEditingController(text: item.lesson.teacher),
       room: TextEditingController(text: item.lesson.room),
-      time: TextEditingController(text: item.lesson.time),
-      startTime: item.lesson.startTime,
+      periodNumber: item.lesson.periodNumber,
     );
   }
 
   String weekday;
   final TextEditingController name;
-  final TextEditingController teacher;
   final TextEditingController room;
-  final TextEditingController time;
-  final int startTime;
+  final int periodNumber;
 
   void dispose() {
     name.dispose();
-    teacher.dispose();
     room.dispose();
-    time.dispose();
   }
 }

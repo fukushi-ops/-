@@ -67,13 +67,23 @@ class HomeWidgetProvider : BaseHomeWidgetProvider() {
         val tasks = readTasks(widgetData)
         val lessonsText = buildLessonsText(widgetData)
         val tasksText = buildTasksText(tasks)
+        views.setTextViewText(R.id.widget_header_date, buildDateLabel())
         if (isMedium) {
             views.setTextViewText(R.id.widget_medium_lessons, lessonsText)
             views.setTextViewText(R.id.widget_medium_tasks, tasksText)
         } else {
-            views.setTextViewText(R.id.widget_text, "$lessonsText\n$tasksText")
+            views.setTextViewText(
+                R.id.widget_text,
+                "今日の授業\n$lessonsText\n\n未提出課題\n$tasksText"
+            )
         }
         appWidgetManager.updateAppWidget(widgetId, views)
+    }
+
+    private fun buildDateLabel(): String {
+        val today = LocalDate.now()
+        val weekdays = listOf("月", "火", "水", "木", "金", "土", "日")
+        return "${today.monthValue}月${today.dayOfMonth}日（${weekdays[today.dayOfWeek.value - 1]}）"
     }
 
     private fun buildLessonsText(widgetData: SharedPreferences): String {
@@ -95,11 +105,10 @@ class HomeWidgetProvider : BaseHomeWidgetProvider() {
         val lessons = schedule.optJSONArray(weekday) ?: JSONArray()
         val lessonLines = (0 until minOf(6, lessons.length())).mapNotNull { index ->
             lessons.optJSONObject(index)?.let { lesson ->
-                "${index + 1}限 ${lesson.optString("name")}"
+                "${lesson.optString("time")}  ${lesson.optString("name")}"
             }
         }
-        return (listOf("今日の授業") + lessonLines.ifEmpty { listOf("授業なし") })
-            .joinToString("\n")
+        return lessonLines.ifEmpty { listOf("授業なし") }.joinToString("\n")
     }
 
     private fun buildTasksText(tasks: List<WidgetTask>): String {
@@ -111,8 +120,7 @@ class HomeWidgetProvider : BaseHomeWidgetProvider() {
             }
             "$remaining ${task.title}"
         }
-        return (listOf("未提出課題") + taskLines.ifEmpty { listOf("課題なし") })
-            .joinToString("\n")
+        return taskLines.ifEmpty { listOf("課題なし") }.joinToString("\n")
     }
 
     private fun readTasks(widgetData: SharedPreferences): List<WidgetTask> {

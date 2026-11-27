@@ -5,7 +5,9 @@ import '../../widgets/subject_dropdown_field.dart';
 import 'lesson_data.dart';
 
 class AddClassScreen extends StatefulWidget {
-  const AddClassScreen({super.key});
+  const AddClassScreen({super.key, required this.periodNumber});
+
+  final int periodNumber;
 
   @override
   State<AddClassScreen> createState() => _AddClassScreenState();
@@ -13,15 +15,11 @@ class AddClassScreen extends StatefulWidget {
 
 class _AddClassScreenState extends State<AddClassScreen> {
   String? _selectedSubject;
-  final teacherController = TextEditingController();
   final roomController = TextEditingController();
-  final timeController = TextEditingController();
 
   @override
   void dispose() {
-    teacherController.dispose();
     roomController.dispose();
-    timeController.dispose();
     super.dispose();
   }
 
@@ -64,16 +62,8 @@ class _AddClassScreenState extends State<AddClassScreen> {
             ),
 
             const SizedBox(height: 20),
-            const Text("先生"),
-            TextField(controller: teacherController),
-
-            const SizedBox(height: 20),
             const Text("教室"),
             TextField(controller: roomController),
-
-            const SizedBox(height: 20),
-            const Text("時間（例：9:00～10:30）"),
-            TextField(controller: timeController),
 
             const SizedBox(height: 30),
 
@@ -87,22 +77,17 @@ class _AddClassScreenState extends State<AddClassScreen> {
                     );
                     return;
                   }
-                  if (teacherController.text.isEmpty ||
-                      roomController.text.isEmpty ||
-                      timeController.text.isEmpty) {
-                    final messenger = ScaffoldMessenger.maybeOf(context);
-                    messenger?.showSnackBar(
-                      const SnackBar(content: Text("すべて入力してください")),
+                  if (roomController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('教室を入力してください')),
                     );
                     return;
                   }
 
                   final newLesson = Lesson(
                     name: subject,
-                    teacher: teacherController.text,
-                    room: roomController.text,
-                    time: timeController.text,
-                    startTime: parseStartTime(timeController.text),
+                    room: roomController.text.trim(),
+                    periodNumber: widget.periodNumber,
                   );
 
                   Navigator.pop(context, newLesson);

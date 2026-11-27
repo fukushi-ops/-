@@ -1,19 +1,15 @@
 class Lesson {
   Lesson({
     required this.name,
-    required this.teacher,
     required this.room,
-    required this.time,
-    required this.startTime,
+    required this.periodNumber,
     this.courseId,
     this.lessonId,
   });
 
   String name;
-  String teacher;
   String room;
-  String time;
-  int startTime;
+  int periodNumber;
 
   // ISAR上で編集・削除する授業を特定するID
   int? courseId;

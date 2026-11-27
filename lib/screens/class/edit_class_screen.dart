@@ -4,35 +4,22 @@ import '../../data/repository/lesson_repository.dart';
 import '../../widgets/subject_dropdown_field.dart';
 import 'lesson_data.dart';
 
-class EditClassScreen extends StatefulWidget {
-  final Lesson lesson;
+class AddClassScreen extends StatefulWidget {
+  const AddClassScreen({super.key, required this.periodNumber});
 
-  const EditClassScreen({super.key, required this.lesson});
+  final int periodNumber;
 
   @override
-  State<EditClassScreen> createState() => _EditClassScreenState();
+  State<AddClassScreen> createState() => _AddClassScreenState();
 }
 
-class _EditClassScreenState extends State<EditClassScreen> {
+class _AddClassScreenState extends State<AddClassScreen> {
   String? _selectedSubject;
-  late TextEditingController teacherController;
-  late TextEditingController roomController;
-  late TextEditingController timeController;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedSubject = widget.lesson.name;
-    teacherController = TextEditingController(text: widget.lesson.teacher);
-    roomController = TextEditingController(text: widget.lesson.room);
-    timeController = TextEditingController(text: widget.lesson.time);
-  }
+  final roomController = TextEditingController();
 
   @override
   void dispose() {
-    teacherController.dispose();
     roomController.dispose();
-    timeController.dispose();
     super.dispose();
   }
 
@@ -60,54 +47,53 @@ class _EditClassScreenState extends State<EditClassScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("授業編集")),
+      appBar: AppBar(title: const Text("授業追加")),
+
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SubjectDropdownField(
               termId: LessonRepository.activeTermId,
-              initialValue: _selectedSubject,
               onChanged: (subject) => setState(() {
                 _selectedSubject = subject;
               }),
             ),
-            TextField(
-              controller: teacherController,
-              decoration: const InputDecoration(labelText: "先生"),
-            ),
-            TextField(
-              controller: roomController,
-              decoration: const InputDecoration(labelText: "教室"),
-            ),
-            TextField(
-              controller: timeController,
-              decoration: const InputDecoration(labelText: "時間（例：9:00～10:30）"),
-            ),
 
             const SizedBox(height: 20),
+            const Text("教室"),
+            TextField(controller: roomController),
 
-            ElevatedButton(
-              onPressed: () {
-                if (_selectedSubject == null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('科目を選択してください')));
-                  return;
-                }
-                final editedLesson = Lesson(
-                  name: _selectedSubject!,
-                  teacher: teacherController.text,
-                  room: roomController.text,
-                  time: timeController.text,
-                  startTime: parseStartTime(timeController.text),
-                  courseId: widget.lesson.courseId,
-                  lessonId: widget.lesson.lessonId,
-                );
+            const SizedBox(height: 30),
 
-                Navigator.pop(context, editedLesson);
-              },
-              child: const Text("保存"),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  final subject = _selectedSubject;
+                  if (subject == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('科目を選択してください')),
+                    );
+                    return;
+                  }
+                  if (roomController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('教室を入力してください')),
+                    );
+                    return;
+                  }
+
+                  final newLesson = Lesson(
+                    name: subject,
+                    room: roomController.text.trim(),
+                    periodNumber: widget.periodNumber,
+                  );
+
+                  Navigator.pop(context, newLesson);
+                },
+                child: const Text("保存"),
+              ),
             ),
           ],
         ),

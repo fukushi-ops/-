@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/repository/lesson_repository.dart';
 import '../data/repository/subject_repository.dart';
@@ -28,8 +27,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _registrationFlowHiddenKey = 'home_registration_flow_hidden';
-
   late Future<List<String>> _subjectsFuture;
   bool _registrationFlowHidden = false;
 
@@ -56,24 +53,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadRegistrationFlowVisibility() async {
-    final preferences = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _registrationFlowHidden =
-          preferences.getBool(_registrationFlowHiddenKey) ?? false;
-    });
+    try {
+      final hidden = await LessonRepository.loadHomeRegistrationFlowHidden();
+      if (!mounted) return;
+      setState(() => _registrationFlowHidden = hidden);
+    } on StateError {
+      // 起動処理より先に画面が生成された場合は既定値を使用する。
+    }
   }
 
   Future<void> _setRegistrationFlowHidden(bool hidden) async {
     try {
-      final preferences = await SharedPreferences.getInstance();
-      final saved = await preferences.setBool(
-        _registrationFlowHiddenKey,
-        hidden,
-      );
-      if (!saved) {
-        throw StateError('登録案内の表示設定を保存できませんでした。');
-      }
+      await LessonRepository.saveHomeRegistrationFlowHidden(hidden);
       if (!mounted) return;
       setState(() => _registrationFlowHidden = hidden);
     } on Exception catch (error) {
@@ -147,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final lessons = List<Lesson>.from(
       LessonData.lessonsByDay[today] ?? const <Lesson>[],
-    )..sort((a, b) => a.startTime.compareTo(b.startTime));
+    )..sort((a, b) => a.periodNumber.compareTo(b.periodNumber));
 
     return Scaffold(
       appBar: AppBar(
@@ -232,6 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF7F3F4),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.blue, width: 2),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,18 +340,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       const SizedBox(height: 7),
                                       _HomeLessonDetail(
                                         icon: Icons.access_time,
-                                        text: lesson.time,
+                                        text: '${lesson.periodNumber}限',
                                       ),
                                       const SizedBox(height: 4),
-                                      _HomeLessonDetail(
-                                        icon: Icons.meeting_room_outlined,
-                                        text: lesson.room,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      _HomeLessonDetail(
-                                        icon: Icons.person_outline,
-                                        text: lesson.teacher,
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -381,6 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF7F3F4),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.red, width: 2),
                 ),
                 child: Column(
                   children: [

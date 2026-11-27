@@ -7,6 +7,36 @@ import '../data_main/isar_service.dart';
 class LessonRepository {
   static int? _activeTermId;
   static String? _activeTermName;
+  static bool? _homeRegistrationFlowHidden;
+
+  static Future<bool> loadHomeRegistrationFlowHidden() async {
+    if (_homeRegistrationFlowHidden != null) {
+      return _homeRegistrationFlowHidden!;
+    }
+
+    final settings = await IsarService.instance.appSettings.get(1);
+    _homeRegistrationFlowHidden = settings?.homeRegistrationFlowHidden ?? false;
+    return _homeRegistrationFlowHidden!;
+  }
+
+  static Future<void> saveHomeRegistrationFlowHidden(bool hidden) async {
+    _homeRegistrationFlowHidden = hidden;
+    try {
+      final isar = IsarService.instance;
+      await isar.writeTxn(() async {
+        final settings =
+            await isar.appSettings.get(1) ?? (AppSettings()..id = 1);
+        settings.homeRegistrationFlowHidden = hidden;
+        await isar.appSettings.put(settings);
+      });
+    } on StateError {
+      // 起動前のウィジェットテストでは、画面状態をキャッシュで保持する。
+    }
+  }
+
+  static void clearHomeRegistrationFlowHiddenCache() {
+    _homeRegistrationFlowHidden = null;
+  }
 
   static int get activeTermId {
     final id = _activeTermId;
@@ -218,10 +248,8 @@ class LessonRepository {
         dayLessons.add(
           Lesson(
             name: course.name,
-            teacher: lesson.teacher,
             room: lesson.room,
-            time: lesson.time,
-            startTime: lesson.startTime,
+            periodNumber: lesson.periodNumber,
             courseId: course.id,
             lessonId: lesson.id,
           ),
@@ -250,19 +278,15 @@ class LessonRepository {
       lessonEntity = LessonEntity()
         ..courseId = course.id
         ..weekday = weekday
-        ..teacher = lesson.teacher
         ..room = lesson.room
-        ..time = lesson.time
-        ..startTime = lesson.startTime;
+        ..periodNumber = lesson.periodNumber;
       await isar.lessonEntitys.put(lessonEntity);
     });
 
     return Lesson(
       name: lesson.name,
-      teacher: lesson.teacher,
       room: lesson.room,
-      time: lesson.time,
-      startTime: lesson.startTime,
+      periodNumber: lesson.periodNumber,
       courseId: course.id,
       lessonId: lessonEntity.id,
     );
@@ -285,10 +309,8 @@ class LessonRepository {
         final lessonEntity = LessonEntity()
           ..courseId = course.id
           ..weekday = item.weekday
-          ..teacher = item.lesson.teacher
           ..room = item.lesson.room
-          ..time = item.lesson.time
-          ..startTime = item.lesson.startTime;
+          ..periodNumber = item.lesson.periodNumber;
         await isar.lessonEntitys.put(lessonEntity);
 
         savedLessons.add(
@@ -296,10 +318,8 @@ class LessonRepository {
             weekday: item.weekday,
             lesson: Lesson(
               name: item.lesson.name,
-              teacher: item.lesson.teacher,
               room: item.lesson.room,
-              time: item.lesson.time,
-              startTime: item.lesson.startTime,
+              periodNumber: item.lesson.periodNumber,
               courseId: course.id,
               lessonId: lessonEntity.id,
             ),
@@ -335,13 +355,43 @@ class LessonRepository {
       course.name = lesson.name;
       lessonEntity
         ..weekday = weekday
-        ..teacher = lesson.teacher
         ..room = lesson.room
-        ..time = lesson.time
-        ..startTime = lesson.startTime;
+        ..periodNumber = lesson.periodNumber;
 
       await isar.courseEntitys.put(course);
       await isar.lessonEntitys.put(lessonEntity);
+    });
+  }
+
+  static Future<void> updateLessonPeriods({
+    required String weekday,
+    required List<Lesson> lessons,
+  }) async {
+    final isar = IsarService.instance;
+    await isar.writeTxn(() async {
+      final entities = <LessonEntity>[];
+      for (final lesson in lessons) {
+        final courseId = lesson.courseId;
+        final lessonId = lesson.lessonId;
+        if (courseId == null || lessonId == null) {
+          throw StateError('更新対象の授業IDがありません。');
+        }
+
+        final course = await isar.courseEntitys.get(courseId);
+        final lessonEntity = await isar.lessonEntitys.get(lessonId);
+        if (course == null ||
+            lessonEntity == null ||
+            lessonEntity.courseId != courseId) {
+          throw StateError('更新対象の授業が見つかりません。');
+        }
+
+        lessonEntity
+          ..weekday = weekday
+          ..periodNumber = lesson.periodNumber;
+        entities.add(lessonEntity);
+      }
+
+      await isar.lessonEntitys.putAll(entities);
     });
   }
 

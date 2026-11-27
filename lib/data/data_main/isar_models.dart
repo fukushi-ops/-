@@ -37,11 +37,9 @@ class LessonEntity {
   @Index()
   late String weekday;
 
-  late String teacher;
   late String room;
-  late String time;
 
-  late int startTime;
+  late int periodNumber;
 }
 
 @collection
@@ -87,6 +85,7 @@ class AttendanceEntity {
 class AppSettings {
   Id id = 1;
   int? selectedTermId;
+  bool homeRegistrationFlowHidden = false;
 }
 
 @collection
